@@ -381,16 +381,42 @@
   .infra-list strong{display:block; font-size:16px; margin-bottom:3px;}
   .infra-list span{font-size:14.5px; color:#5a6152;}
   .map-card{
-    background:var(--pine); border-radius:4px; padding:40px; color:var(--paper);
-    position:relative; overflow:hidden;
+    background:var(--pine); border-radius:6px; color:var(--paper);
+    position:relative; overflow:hidden; height:440px;
+  }
+  .carousel-track{position:relative; width:100%; height:100%;}
+  .carousel-slide{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    opacity:0; transition:opacity .9s ease;
+  }
+  .carousel-slide.active{opacity:1;}
+  .carousel-overlay{
+    position:absolute; left:0; right:0; bottom:0; z-index:3;
+    padding:30px 30px 26px;
+    background:linear-gradient(to top, rgba(9,15,10,0.92) 0%, rgba(9,15,10,0.55) 55%, rgba(9,15,10,0) 100%);
   }
   .map-card .pin{
     display:flex; align-items:center; gap:10px; font-family:'IBM Plex Mono', monospace;
-    font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--orange); margin-bottom:16px;
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--orange); margin-bottom:12px;
   }
-  .map-card h3{font-size:26px; margin-bottom:10px;}
-  .map-card p{color:var(--mist); font-size:14.5px; max-width:340px;}
-  @media (max-width:900px){ .base-grid{grid-template-columns:1fr;} }
+  .map-card h3{font-size:24px; margin:0;}
+  .carousel-arrow{
+    position:absolute; top:50%; transform:translateY(-50%); z-index:4;
+    width:38px; height:38px; border-radius:50%; border:1px solid rgba(243,237,224,0.4);
+    background:rgba(13,22,16,0.4); color:var(--paper); font-size:22px; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:background .2s ease, border-color .2s ease;
+  }
+  .carousel-arrow:hover{background:var(--orange); border-color:var(--orange); color:var(--pine);}
+  .carousel-arrow.prev{left:14px;}
+  .carousel-arrow.next{right:14px;}
+  .carousel-dots{position:absolute; right:20px; top:20px; z-index:4; display:flex; gap:7px;}
+  .carousel-dots button{
+    width:7px; height:7px; border-radius:50%; border:0; background:rgba(243,237,224,0.45);
+    cursor:pointer; padding:0; transition:background .2s ease, transform .2s ease;
+  }
+  .carousel-dots button.active{background:var(--orange); transform:scale(1.35);}
+  @media (max-width:900px){ .base-grid{grid-template-columns:1fr;} .map-card{height:340px;} }
 
   /* Objetivos — timeline */
   .timeline{display:grid; grid-template-columns:repeat(3,1fr); gap:2px; margin-top:56px; background:var(--line);}
@@ -813,23 +839,18 @@
             </li>
           </ul>
         </div>
-        <div class="map-card reveal">
-          <div class="pin mono">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21 C12 21 5 14.5 5 9.5 C5 5.9 8.1 3 12 3 C15.9 3 19 5.9 19 9.5 C19 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
-            Louseiro, Cortes do Meio
+        <div class="map-card reveal" id="louseiro-carousel">
+          <div class="carousel-track" id="carousel-track"></div>
+          <div class="carousel-overlay">
+            <div class="pin mono">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21 C12 21 5 14.5 5 9.5 C5 5.9 8.1 3 12 3 C15.9 3 19 5.9 19 9.5 C19 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+              Louseiro, Cortes do Meio
+            </div>
+            <h3>O ponto zero de todas as rotas</h3>
           </div>
-          <h3>O ponto zero de todas as rotas</h3>
-          <p>Todo o catálogo digital parte fisicamente do Campo Multidesportos — a base viva da Base Outdoor.</p>
-          <div style="margin-top:28px;">
-            <svg width="100%" height="130" viewBox="0 0 300 130">
-              <g stroke="#8a9a5b" stroke-width="1" fill="none" opacity="0.6">
-                <path d="M0,100 C60,80 100,110 160,90 C220,70 260,95 300,80"/>
-                <path d="M0,80 C60,60 100,90 160,70 C220,50 260,75 300,60"/>
-              </g>
-              <circle cx="160" cy="90" r="5" fill="#e35f21"/>
-              <circle cx="160" cy="90" r="10" fill="none" stroke="#e35f21" stroke-width="1" opacity="0.5"/>
-            </svg>
-          </div>
+          <button class="carousel-arrow prev" aria-label="Imagem anterior">‹</button>
+          <button class="carousel-arrow next" aria-label="Imagem seguinte">›</button>
+          <div class="carousel-dots" id="carousel-dots"></div>
         </div>
       </div>
     </div>
@@ -997,6 +1018,78 @@
       submitBtn.disabled = false;
     }
   });
+
+  // Louseiro photo carousel — reads images from assets/images/louseiro/
+  // To add more photos: drop the file in that folder and add its path below.
+  const louseiroImages = [
+    'assets/images/louseiro/louseiro-1.jpg'
+    // , 'assets/images/louseiro/louseiro-2.jpg'
+    // , 'assets/images/louseiro/louseiro-3.jpg'
+  ];
+
+  (function initCarousel(){
+    const root = document.getElementById('louseiro-carousel');
+    const track = document.getElementById('carousel-track');
+    const dotsWrap = document.getElementById('carousel-dots');
+    const prevBtn = root.querySelector('.carousel-arrow.prev');
+    const nextBtn = root.querySelector('.carousel-arrow.next');
+    if (!root || !track || louseiroImages.length === 0) return;
+
+    let current = 0;
+    let timer;
+
+    louseiroImages.forEach((src, i) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Campo Multidesportos do Louseiro';
+      img.className = 'carousel-slide' + (i === 0 ? ' active' : '');
+      track.appendChild(img);
+    });
+    const slides = track.querySelectorAll('.carousel-slide');
+
+    if (louseiroImages.length > 1){
+      louseiroImages.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.setAttribute('aria-label', 'Ir para imagem ' + (i + 1));
+        if (i === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => { goTo(i); resetTimer(); });
+        dotsWrap.appendChild(dot);
+      });
+    } else {
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+    }
+
+    function goTo(i){
+      slides[current].classList.remove('active');
+      if (dotsWrap.children[current]) dotsWrap.children[current].classList.remove('active');
+      current = (i + slides.length) % slides.length;
+      slides[current].classList.add('active');
+      if (dotsWrap.children[current]) dotsWrap.children[current].classList.add('active');
+    }
+    function next(){ goTo(current + 1); }
+    function prev(){ goTo(current - 1); }
+
+    nextBtn.addEventListener('click', () => { next(); resetTimer(); });
+    prevBtn.addEventListener('click', () => { prev(); resetTimer(); });
+
+    function startTimer(){ if (louseiroImages.length > 1) timer = setInterval(next, 5000); }
+    function resetTimer(){ clearInterval(timer); startTimer(); }
+
+    root.addEventListener('mouseenter', () => clearInterval(timer));
+    root.addEventListener('mouseleave', startTimer);
+
+    let startX = null;
+    root.addEventListener('pointerdown', (e) => { startX = e.clientX; });
+    root.addEventListener('pointerup', (e) => {
+      if (startX === null) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 40){ dx < 0 ? next() : prev(); resetTimer(); }
+      startX = null;
+    });
+
+    startTimer();
+  })();
 
   // Header background on scroll
   const header = document.getElementById('site-header');
