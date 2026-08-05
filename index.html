@@ -304,6 +304,71 @@
     max-width:640px;
   }
 
+  /* Submeter rota */
+  .submit-head{
+    display:grid; grid-template-columns:1.15fr 0.85fr; gap:60px; align-items:start;
+    margin-bottom:56px;
+  }
+  .submit-lede{font-size:16.5px; color:#5a6152; max-width:520px; margin-top:18px;}
+  .submit-steps{list-style:none; border-top:1px solid #e7e0cf;}
+  .submit-steps li{
+    display:flex; gap:16px; align-items:baseline; padding:16px 0;
+    border-bottom:1px solid #e7e0cf; font-size:14.5px; color:#3d4436;
+  }
+  .submit-steps span{
+    font-size:12px; color:var(--orange); letter-spacing:0.06em; flex-shrink:0;
+  }
+  @media (max-width:860px){ .submit-head{grid-template-columns:1fr;} }
+
+  .gpx-form{
+    background:var(--paper); border:1px solid #e7e0cf; border-radius:6px;
+    padding:44px; max-width:760px;
+  }
+  .hp-field{position:absolute; left:-9999px; opacity:0;}
+  .form-row{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  .form-field{display:flex; flex-direction:column; gap:8px; margin-bottom:22px;}
+  .form-field label{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:0.07em;
+    text-transform:uppercase; color:var(--ink);
+  }
+  .form-field .optional{color:#9a9584; text-transform:none; letter-spacing:0;}
+  .form-field input[type="text"],
+  .form-field input[type="email"],
+  .form-field select,
+  .form-field textarea{
+    font-family:'Work Sans', sans-serif; font-size:15px; color:var(--ink);
+    background:#fff; border:1px solid #d8d0ba; border-radius:3px; padding:12px 14px;
+    transition:border-color .2s ease;
+    width:100%;
+  }
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus{
+    outline:none; border-color:var(--orange);
+  }
+  .form-field textarea{resize:vertical;}
+  .file-drop{
+    position:relative; border:1.5px dashed #d8d0ba; border-radius:4px;
+    padding:34px 20px; text-align:center; display:flex; flex-direction:column;
+    align-items:center; gap:10px; transition:border-color .2s ease, background .2s ease;
+    background:#fff;
+  }
+  .file-drop svg{width:26px; height:26px; stroke:var(--orange);}
+  .file-drop-label{font-size:12.5px; color:#5a6152;}
+  .file-drop.drag-over{border-color:var(--orange); background:rgba(227,95,33,0.05);}
+  .file-drop.has-file{border-style:solid; border-color:var(--olive);}
+  .file-drop input[type="file"]{
+    position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+  }
+  .form-footer{display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-top:6px;}
+  .form-status{font-size:13px;}
+  .form-status.ok{color:#4b7a3d;}
+  .form-status.err{color:var(--orange);}
+  @media (max-width:640px){
+    .gpx-form{padding:28px 22px;}
+    .form-row{grid-template-columns:1fr;}
+  }
+
   /* Base física */
   .base-grid{display:grid; grid-template-columns:0.95fr 1.05fr; gap:70px; align-items:center;}
   .infra-list{list-style:none; margin-top:28px;}
@@ -426,6 +491,7 @@
     <a href="#pretende">Objetivo</a>
     <a href="#premissas">Premissas</a>
     <a href="#rotas">Rotas</a>
+    <a href="#submeter">Submeter rota</a>
     <a href="#base">Base física</a>
     <a href="#estrategia">Estratégia</a>
     <a href="#contacto" class="nav-cta">Contacto</a>
@@ -654,6 +720,76 @@
     </div>
   </section>
 
+  <!-- SUBMETER ROTA -->
+  <section id="submeter">
+    <div class="wrap">
+      <div class="submit-head">
+        <div class="reveal">
+          <div class="eyebrow">Contribuir</div>
+          <h2 class="h-title">Tens um GPX<br>para partilhar?</h2>
+          <p class="submit-lede">Se já percorreste uma rota que devia estar no catálogo, envia o ficheiro. A equipa da Base Outdoor revê cada submissão antes de a publicar.</p>
+        </div>
+        <ul class="submit-steps mono reveal">
+          <li><span>01</span>Preenches o formulário e anexas o .gpx</li>
+          <li><span>02</span>A submissão fica em fila de revisão</li>
+          <li><span>03</span>Aprovada, entra no catálogo público</li>
+        </ul>
+      </div>
+
+      <form id="gpx-form" class="gpx-form reveal" name="gpx-submission" method="POST" data-netlify="true" netlify-honeypot="empresa" enctype="multipart/form-data">
+        <input type="hidden" name="form-name" value="gpx-submission">
+        <p class="hp-field" aria-hidden="true"><label>Não preencher<input name="empresa" tabindex="-1" autocomplete="off"></label></p>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="f-nome">Nome</label>
+            <input type="text" id="f-nome" name="nome" required>
+          </div>
+          <div class="form-field">
+            <label for="f-email">Email</label>
+            <input type="email" id="f-email" name="email" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="f-rota">Nome da rota</label>
+            <input type="text" id="f-rota" name="nome_rota" required>
+          </div>
+          <div class="form-field">
+            <label for="f-categoria">Categoria</label>
+            <select id="f-categoria" name="categoria" required>
+              <option value="" disabled selected>Selecionar</option>
+              <option value="btt">BTT</option>
+              <option value="estrada">Estrada</option>
+              <option value="trail">Trail</option>
+              <option value="cross">Cross</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="f-notas">Notas <span class="optional">(opcional)</span></label>
+          <textarea id="f-notas" name="notas" rows="3" placeholder="Dificuldade, ponto de partida, pontos de interesse…"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label for="f-gpx">Ficheiro GPX</label>
+          <div class="file-drop" id="file-drop">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4 V15 M7 9 L12 4 L17 9 M5 20 H19"/></svg>
+            <span class="file-drop-label mono" id="file-drop-label">Arrasta o ficheiro .gpx para aqui, ou clica para escolher</span>
+            <input type="file" id="f-gpx" name="gpx" accept=".gpx" required>
+          </div>
+        </div>
+
+        <div class="form-footer">
+          <button type="submit" class="btn-primary" id="gpx-submit">Enviar para revisão</button>
+          <p class="form-status mono" id="form-status" hidden></p>
+        </div>
+      </form>
+    </div>
+  </section>
+
   <!-- BASE FÍSICA -->
   <section class="section-dark" id="base">
     <div class="wrap">
@@ -794,6 +930,74 @@
 </footer>
 
 <script>
+  // GPX submission form
+  const gpxForm = document.getElementById('gpx-form');
+  const fileInput = document.getElementById('f-gpx');
+  const fileDrop = document.getElementById('file-drop');
+  const fileDropLabel = document.getElementById('file-drop-label');
+  const formStatus = document.getElementById('form-status');
+  const submitBtn = document.getElementById('gpx-submit');
+
+  function setFileLabel(file){
+    if (file && file.name){
+      fileDropLabel.textContent = file.name + ' — pronto a enviar';
+      fileDrop.classList.add('has-file');
+    } else {
+      fileDropLabel.textContent = 'Arrasta o ficheiro .gpx para aqui, ou clica para escolher';
+      fileDrop.classList.remove('has-file');
+    }
+  }
+
+  fileInput.addEventListener('change', () => setFileLabel(fileInput.files[0]));
+
+  ['dragenter','dragover'].forEach(evt => {
+    fileDrop.addEventListener(evt, (e) => { e.preventDefault(); fileDrop.classList.add('drag-over'); });
+  });
+  ['dragleave','drop'].forEach(evt => {
+    fileDrop.addEventListener(evt, (e) => { e.preventDefault(); fileDrop.classList.remove('drag-over'); });
+  });
+  fileDrop.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file){
+      if (!file.name.toLowerCase().endsWith('.gpx')){
+        formStatus.hidden = false;
+        formStatus.className = 'form-status mono err';
+        formStatus.textContent = 'Por favor envia um ficheiro .gpx.';
+        return;
+      }
+      fileInput.files = e.dataTransfer.files;
+      setFileLabel(file);
+    }
+  });
+
+  gpxForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'A enviar…';
+    formStatus.hidden = true;
+
+    const formData = new FormData(gpxForm);
+    try {
+      const res = await fetch('/', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error('network');
+      formStatus.hidden = false;
+      formStatus.className = 'form-status mono ok';
+      formStatus.textContent = 'Recebido! A rota entra em fila de revisão — obrigado pela contribuição.';
+      gpxForm.reset();
+      setFileLabel(null);
+      submitBtn.textContent = 'Enviar para revisão';
+      submitBtn.disabled = false;
+    } catch (err) {
+      // Fallback for hosting without a form backend (e.g. opening the file locally,
+      // or a static host that isn't wired to Netlify Forms / an upload endpoint).
+      formStatus.hidden = false;
+      formStatus.className = 'form-status mono err';
+      formStatus.innerHTML = 'Não foi possível submeter automaticamente. Envia o ficheiro por email para <a href="mailto:geral@amigosdopedal.pt?subject=Submiss%C3%A3o%20de%20rota%20GPX" style="color:var(--orange); text-decoration:underline;">geral@amigosdopedal.pt</a> com o .gpx em anexo.';
+      submitBtn.textContent = 'Enviar para revisão';
+      submitBtn.disabled = false;
+    }
+  });
+
   // Header background on scroll
   const header = document.getElementById('site-header');
   window.addEventListener('scroll', () => {
