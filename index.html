@@ -122,15 +122,22 @@
   /* ===== Hero ===== */
   .hero{
     position:relative; min-height:100vh;
-    background:radial-gradient(120% 90% at 20% 0%, #1a2c1f 0%, var(--pine) 55%, #0d1610 100%);
+    background:
+      radial-gradient(120% 90% at 20% 0%, rgba(19,31,23,0.35) 0%, rgba(13,22,16,0.72) 55%, rgba(10,17,12,0.92) 100%),
+      url('assets/campo-louseiro.jpg') center 62% / cover no-repeat;
     color:var(--paper);
     display:flex; flex-direction:column; justify-content:center;
     padding:150px 60px 90px;
     overflow:hidden;
   }
-  .hero-topo{position:absolute; inset:0; opacity:0.5; z-index:0;}
-  .hero-topo path{fill:none; stroke:rgba(138,154,91,0.35); stroke-width:1;}
+  .hero-topo{position:absolute; inset:0; opacity:0.35; z-index:0;}
+  .hero-topo path{fill:none; stroke:rgba(201,211,191,0.4); stroke-width:1;}
   .hero-content{position:relative; z-index:2; max-width:900px;}
+  .hero-club-logo{
+    width:104px; height:auto; background:var(--paper); border-radius:10px;
+    padding:8px 10px; box-shadow:0 10px 26px rgba(0,0,0,0.35);
+    margin-bottom:26px;
+  }
   .hero h1{
     font-size:clamp(58px, 10vw, 132px);
     color:var(--paper);
@@ -242,8 +249,22 @@
   .pillar li::before{content:"—"; position:absolute; left:0; color:var(--olive);}
   @media (max-width:760px){ .pillars{grid-template-columns:1fr;} }
 
-  /* Rotas */
+  /* Rotas — filtros */
   .routes-head{display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; margin-bottom:50px;}
+  .route-filters{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:36px;}
+  .filter-btn{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:0.05em;
+    text-transform:uppercase; padding:9px 18px; border-radius:20px;
+    border:1px solid #d8d0ba; background:transparent; color:#5a6152;
+    cursor:pointer; transition:background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .filter-btn:hover{border-color:var(--orange); color:var(--ink);}
+  .filter-btn.active{background:var(--pine); border-color:var(--pine); color:var(--paper);}
+  .empty-state{
+    text-align:center; font-size:13px; color:#7c8570; padding:50px 20px;
+    border:1px dashed #d8d0ba; border-radius:4px; margin-bottom:10px;
+  }
+
   .route-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:20px;}
   .route-card{
     background:var(--forest); border:1px solid var(--line); border-radius:4px;
@@ -269,6 +290,15 @@
   .route-card .status{
     font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--mist); letter-spacing:0.05em;
   }
+  .gpx-download{
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    margin-top:2px; padding:11px 14px; border-radius:2px;
+    border:1px solid var(--orange); color:var(--orange-2);
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.06em;
+    text-transform:uppercase; transition:background .2s ease, color .2s ease;
+  }
+  .gpx-download svg{width:15px; height:15px;}
+  .gpx-download:hover{background:var(--orange); color:var(--pine);}
   .routes-note{
     margin-top:36px; font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--mist);
     max-width:640px;
@@ -414,7 +444,7 @@
       <path d="M-50,550 C170,470 350,540 540,480 C740,415 900,490 1100,420 C1180,395 1220,410 1260,400" />
     </svg>
     <div class="hero-content">
-      <div class="eyebrow">Amigos do Pedal — Covilhã · Serra da Estrela</div>
+      <div class="eyebrow">Amigos do Pedal — Cortes do Meio · Serra da Estrela</div>
       <h1>BASE<br><span class="accent">OUTDOOR</span></h1>
       <p class="by mono">by Amigos do Pedal</p>
       <p class="lede">O centro digital de rotas GPX para BTT, ciclismo de estrada, trail e atletismo na Serra da Estrela — com base física no Campo Multidesportos do Louseiro.</p>
@@ -439,7 +469,7 @@
         <div class="reveal">
           <div class="eyebrow">Apresentação</div>
           <h2 class="h-title">Uma base para<br>o que já fazíamos</h2>
-          <p>A Base Outdoor nasce da vontade de organizar, valorizar e estruturar aquilo que os Amigos do Pedal já fazem há vários anos: promover o desporto outdoor, a ligação ao território e a cultura de superação na região da Covilhã.</p>
+          <p>A Base Outdoor nasce da vontade de organizar, valorizar e estruturar aquilo que os Amigos do Pedal já fazem há vários anos: promover o desporto outdoor, a ligação ao território e a cultura de superação na região de Cortes do Meio.</p>
           <p>Assume-se como um centro digital de rotas e ponto de partida para a prática de BTT, ciclismo de estrada, atletismo e trail, com base física no Campo Multidesportos do Louseiro.</p>
           <p>Mais do que um conjunto de percursos, a Base Outdoor pretende afirmar a Serra da Estrela como território ativo de treino, aventura e identidade desportiva.</p>
         </div>
@@ -536,8 +566,17 @@
         </div>
         <p class="mono" style="max-width:340px; font-size:13px; color:#5a6152;">Raids e travessias já realizados pelos Amigos do Pedal — o ponto de partida do catálogo digital de rotas.</p>
       </div>
-      <div class="route-grid">
-        <div class="route-card reveal">
+
+      <div class="route-filters reveal" role="tablist" aria-label="Filtrar rotas por categoria">
+        <button class="filter-btn active" data-filter="todas" role="tab" aria-selected="true">Todas</button>
+        <button class="filter-btn" data-filter="btt" role="tab" aria-selected="false">BTT</button>
+        <button class="filter-btn" data-filter="estrada" role="tab" aria-selected="false">Estrada</button>
+        <button class="filter-btn" data-filter="trail" role="tab" aria-selected="false">Trail</button>
+        <button class="filter-btn" data-filter="cross" role="tab" aria-selected="false">Cross</button>
+      </div>
+
+      <div class="route-grid" id="route-grid">
+        <div class="route-card reveal" data-category="btt">
           <div class="route-top"><span class="route-name">Folgosinho</span><span class="route-type type-btt">BTT</span></div>
           <div class="route-stats">
             <div><span class="val mono">38 km</span><span class="lbl">distância</span></div>
@@ -545,8 +584,12 @@
           </div>
           <div class="diff-bar"><span style="width:65%"></span></div>
           <div class="status mono">raid histórico · aldeia serrana</div>
+          <a class="gpx-download" href="assets/gpx/folgosinho.gpx" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
+            Download GPX
+          </a>
         </div>
-        <div class="route-card reveal">
+        <div class="route-card reveal" data-category="trail">
           <div class="route-top"><span class="route-name">Sortelha</span><span class="route-type type-trail">Trail</span></div>
           <div class="route-stats">
             <div><span class="val mono">27 km</span><span class="lbl">distância</span></div>
@@ -554,8 +597,12 @@
           </div>
           <div class="diff-bar"><span style="width:50%"></span></div>
           <div class="status mono">raid histórico · aldeia histórica</div>
+          <a class="gpx-download" href="assets/gpx/sortelha.gpx" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
+            Download GPX
+          </a>
         </div>
-        <div class="route-card reveal">
+        <div class="route-card reveal" data-category="estrada">
           <div class="route-top"><span class="route-name">Monsanto</span><span class="route-type type-estrada">Estrada</span></div>
           <div class="route-stats">
             <div><span class="val mono">54 km</span><span class="lbl">distância</span></div>
@@ -563,8 +610,12 @@
           </div>
           <div class="diff-bar"><span style="width:40%"></span></div>
           <div class="status mono">raid histórico · aldeia histórica</div>
+          <a class="gpx-download" href="assets/gpx/monsanto.gpx" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
+            Download GPX
+          </a>
         </div>
-        <div class="route-card reveal">
+        <div class="route-card reveal" data-category="btt">
           <div class="route-top"><span class="route-name">Piódão</span><span class="route-type type-btt">BTT</span></div>
           <div class="route-stats">
             <div><span class="val mono">46 km</span><span class="lbl">distância</span></div>
@@ -572,8 +623,12 @@
           </div>
           <div class="diff-bar"><span style="width:85%"></span></div>
           <div class="status mono">raid histórico · travessia serrana</div>
+          <a class="gpx-download" href="assets/gpx/piodao.gpx" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
+            Download GPX
+          </a>
         </div>
-        <div class="route-card reveal">
+        <div class="route-card reveal" data-category="trail">
           <div class="route-top"><span class="route-name">Castelo Novo</span><span class="route-type type-trail">Trail</span></div>
           <div class="route-stats">
             <div><span class="val mono">22 km</span><span class="lbl">distância</span></div>
@@ -581,14 +636,21 @@
           </div>
           <div class="diff-bar"><span style="width:35%"></span></div>
           <div class="status mono">raid histórico · aldeia histórica</div>
+          <a class="gpx-download" href="assets/gpx/castelo-novo.gpx" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
+            Download GPX
+          </a>
         </div>
-        <div class="route-card reveal" style="align-items:flex-start; justify-content:center; background:transparent; border-style:dashed;">
+        <div class="route-card reveal" data-category="brevemente" style="align-items:flex-start; justify-content:center; background:transparent; border-style:dashed;">
           <div class="route-type mono" style="background:none; padding:0; color:#5a6152; font-size:12px;">EM CONSTRUÇÃO</div>
           <span class="route-name" style="color:#5a6152; font-size:19px;">Bikepacking &amp; travessias épicas</span>
           <p class="mono" style="font-size:12.5px; color:#7c8570;">Expansão do catálogo prevista a médio prazo.</p>
         </div>
       </div>
-      <p class="routes-note">Distâncias e desníveis apresentados são ilustrativos do formato final — os ficheiros GPX definitivos serão publicados no lançamento do catálogo digital. Utilização por conta e risco do praticante.</p>
+
+      <p class="empty-state mono" id="routes-empty" hidden>Ainda não há rotas publicadas nesta categoria. Fica atento — o catálogo está em expansão.</p>
+
+      <p class="routes-note">Os ficheiros GPX disponíveis para download são exemplos de marcador de posição. Os tracks reais serão publicados no lançamento do catálogo digital. Utilização por conta e risco do praticante.</p>
     </div>
   </section>
 
@@ -618,7 +680,7 @@
         <div class="map-card reveal">
           <div class="pin mono">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21 C12 21 5 14.5 5 9.5 C5 5.9 8.1 3 12 3 C15.9 3 19 5.9 19 9.5 C19 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
-            Louseiro, Covilhã
+            Louseiro, Cortes do Meio
           </div>
           <h3>O ponto zero de todas as rotas</h3>
           <p>Todo o catálogo digital parte fisicamente do Campo Multidesportos — a base viva da Base Outdoor.</p>
@@ -709,7 +771,7 @@
           <h4>Contacto</h4>
           <a href="mailto:geral@amigosdopedal.pt">geral@amigosdopedal.pt</a>
           <span>Campo Multidesportos do Louseiro</span>
-          <span>Covilhã, Portugal</span>
+          <span>Cortes do Meio, Portugal</span>
         </div>
         <div class="footer-col">
           <h4>Explorar</h4>
@@ -755,6 +817,28 @@
     });
   }, { threshold: 0.15 });
   revealEls.forEach(el => io.observe(el));
+
+  // Route category filters
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const routeCards = document.querySelectorAll('#route-grid .route-card');
+  const routesEmpty = document.getElementById('routes-empty');
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
+      const filter = btn.dataset.filter;
+      let visibleCount = 0;
+      routeCards.forEach(card => {
+        const cat = card.dataset.category;
+        const finalShow = filter === 'todas' ? true : cat === filter;
+        card.style.display = finalShow ? '' : 'none';
+        if (finalShow && cat !== 'brevemente') visibleCount++;
+      });
+      routesEmpty.hidden = visibleCount !== 0;
+    });
+  });
 
   // Route line drawn along scroll progress
   const routePath = document.getElementById('routeline-path');
