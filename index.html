@@ -1021,24 +1021,25 @@
     }
   });
 
-  // Louseiro photo carousel — reads images from assets/images/louseiro/
-  // To add more photos: drop the file in that folder and add its path below.
-  const louseiroImages = [
-    'assets/images/louseiro/Screenshot 2026-08-05 at 10.15.28.png',
-    'assets/images/louseiro/images.jpeg',
-    'assets/images/louseiro/campo-louseiro.jpg',
-    'assets/images/louseiro/Campo-Multidesportos-do-Louseiro-Cortes-do-Meio.jpg'
-    // , 'assets/images/louseiro/louseiro-2.jpg'
-    // , 'assets/images/louseiro/louseiro-3.jpg'
-  ];
-
-  (function initCarousel(){
+  // Louseiro photo carousel — images are fetched automatically from
+  // assets/images/louseiro/ via a serverless function. Drop a new photo in
+  // that folder and it appears in the carousel on the next deploy.
+  (async function initCarousel(){
     const root = document.getElementById('louseiro-carousel');
     const track = document.getElementById('carousel-track');
     const dotsWrap = document.getElementById('carousel-dots');
     const prevBtn = root.querySelector('.carousel-arrow.prev');
     const nextBtn = root.querySelector('.carousel-arrow.next');
-    if (!root || !track || louseiroImages.length === 0) return;
+    if (!root || !track) return;
+
+    let louseiroImages = [];
+    try {
+      const res = await fetch('/.netlify/functions/louseiro-images');
+      if (res.ok) louseiroImages = await res.json();
+    } catch (err) {
+      console.error('Não foi possível carregar as fotos do Louseiro:', err);
+    }
+    if (louseiroImages.length === 0) return;
 
     let current = 0;
     let timer;
