@@ -265,34 +265,75 @@
     border:1px dashed #d8d0ba; border-radius:4px; margin-bottom:10px;
   }
 
-  .route-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:20px;}
-  .route-card{
-    background:var(--forest); border:1px solid var(--line); border-radius:4px;
-    padding:26px; display:flex; flex-direction:column; gap:16px;
-    transition:transform .25s ease, border-color .25s ease;
-  }
-  .route-card:hover{transform:translateY(-5px); border-color:var(--orange);}
-  .route-top{display:flex; justify-content:space-between; align-items:flex-start;}
-  .route-name{font-family:'Anton', sans-serif; font-size:23px; text-transform:uppercase; color:var(--paper); max-width:170px;}
+  /* Route type tags (reused in list + detail) */
   .route-type{
     font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.08em;
     text-transform:uppercase; padding:5px 9px; border-radius:20px; white-space:nowrap;
+    display:inline-block;
   }
   .type-btt{background:rgba(138,154,91,0.18); color:var(--olive);}
   .type-trail{background:rgba(227,95,33,0.16); color:var(--orange-2);}
   .type-estrada{background:rgba(201,211,191,0.14); color:var(--mist);}
-  .route-stats{display:flex; gap:22px; border-top:1px solid var(--line); padding-top:14px;}
-  .route-stats div{display:flex; flex-direction:column; gap:3px;}
-  .route-stats .val{font-family:'IBM Plex Mono', monospace; font-size:17px; color:var(--paper);}
-  .route-stats .lbl{font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--olive);}
   .diff-bar{height:4px; width:100%; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;}
   .diff-bar span{display:block; height:100%; background:var(--orange);}
-  .route-card .status{
-    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--mist); letter-spacing:0.05em;
+
+  /* Explorer: list + track panel */
+  .routes-explorer{
+    display:grid; grid-template-columns:280px 1fr; gap:0;
+    background:var(--forest); border:1px solid var(--line); border-radius:6px;
+    overflow:hidden; min-height:480px;
   }
+  .routes-list-wrap{border-right:1px solid var(--line); max-height:560px; overflow-y:auto;}
+  .routes-list{list-style:none;}
+  .route-list-item{
+    padding:16px 22px; border-bottom:1px solid var(--line); cursor:pointer;
+    display:flex; flex-direction:column; gap:5px; position:relative;
+    transition:background .2s ease;
+  }
+  .route-list-item::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--orange); transform:scaleY(0); transition:transform .2s ease;
+  }
+  .route-list-item:hover{background:rgba(227,95,33,0.06);}
+  .route-list-item.active{background:rgba(227,95,33,0.1);}
+  .route-list-item.active::before{transform:scaleY(1);}
+  .route-list-name{
+    font-family:'Anton', sans-serif; font-size:17px; text-transform:uppercase; color:var(--paper);
+  }
+  .route-list-meta{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--mist); letter-spacing:0.03em;}
+  .route-list-note{
+    padding:16px 22px; font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    color:#7c8f77; border-bottom:0;
+  }
+
+  .route-detail{display:flex; flex-direction:column; padding:30px 32px;}
+  .route-detail-head{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:22px;}
+  .route-detail-head h3{
+    font-family:'Anton', sans-serif; font-size:30px; text-transform:uppercase; color:var(--paper); margin-top:8px;
+  }
+  .route-canvas{
+    position:relative; background:var(--pine); border-radius:4px;
+    aspect-ratio:16/10; display:flex; align-items:center; justify-content:center;
+    margin-bottom:22px; overflow:hidden;
+  }
+  .route-canvas svg{width:100%; height:100%;}
+  .track-path{fill:none; stroke:var(--orange-2); stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;}
+  .track-start{fill:var(--olive);}
+  .track-end{fill:var(--orange-2);}
+  .canvas-empty{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:0 30px; font-size:12.5px; color:var(--mist); line-height:1.6;
+  }
+  .route-detail-stats{display:flex; gap:32px; align-items:center; flex-wrap:wrap; margin-bottom:18px;}
+  .route-detail-stats > div{display:flex; flex-direction:column; gap:4px;}
+  .route-detail-stats .val{font-family:'IBM Plex Mono', monospace; font-size:18px; color:var(--paper);}
+  .route-detail-stats .lbl{font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:#8a9a5b;}
+  .diff-bar-wrap{flex:1; min-width:140px; display:flex; flex-direction:column; gap:6px;}
+  .route-detail-status{font-family:'IBM Plex Mono', monospace; font-size:12px; color:#8a9a5b; min-height:16px;}
+
   .gpx-download{
     display:flex; align-items:center; justify-content:center; gap:9px;
-    margin-top:2px; padding:11px 14px; border-radius:2px;
+    padding:11px 16px; border-radius:2px;
     border:1px solid var(--orange); color:var(--orange-2);
     font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.06em;
     text-transform:uppercase; transition:background .2s ease, color .2s ease;
@@ -300,8 +341,13 @@
   .gpx-download svg{width:15px; height:15px;}
   .gpx-download:hover{background:var(--orange); color:var(--pine);}
   .routes-note{
-    margin-top:36px; font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--mist);
+    margin-top:28px; font-family:'IBM Plex Mono', monospace; font-size:13px; color:#6b7362;
     max-width:640px;
+  }
+  @media (max-width:760px){
+    .routes-explorer{grid-template-columns:1fr;}
+    .routes-list-wrap{border-right:0; border-bottom:1px solid var(--line); max-height:260px;}
+    .route-detail{padding:26px 22px;}
   }
 
   /* Submeter rota */
@@ -656,7 +702,7 @@
           <div class="eyebrow">Rotas GPX</div>
           <h2 class="h-title">O histórico que<br>já percorremos</h2>
         </div>
-        <p class="mono" style="max-width:340px; font-size:13px; color:#5a6152;">Raids e travessias já realizados pelos Amigos do Pedal — o ponto de partida do catálogo digital de rotas.</p>
+        <p class="mono" style="max-width:340px; font-size:13px; color:#5a6152;">Seleciona uma rota na lista para veres o traçado e descarregares o ficheiro GPX.</p>
       </div>
 
       <div class="route-filters reveal" role="tablist" aria-label="Filtrar rotas por categoria">
@@ -667,82 +713,38 @@
         <button class="filter-btn" data-filter="cross" role="tab" aria-selected="false">Cross</button>
       </div>
 
-      <div class="route-grid" id="route-grid">
-        <div class="route-card reveal" data-category="btt">
-          <div class="route-top"><span class="route-name">Folgosinho</span><span class="route-type type-btt">BTT</span></div>
-          <div class="route-stats">
-            <div><span class="val mono">38 km</span><span class="lbl">distância</span></div>
-            <div><span class="val mono">920 m</span><span class="lbl">D+</span></div>
-          </div>
-          <div class="diff-bar"><span style="width:65%"></span></div>
-          <div class="status mono">raid histórico · aldeia serrana</div>
-          <a class="gpx-download" href="assets/gpx/folgosinho.gpx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
-            Download GPX
-          </a>
+      <div class="routes-explorer reveal">
+        <div class="routes-list-wrap">
+          <ul class="routes-list" id="routes-list"></ul>
+          <div class="route-list-note mono">EM CONSTRUÇÃO — Bikepacking &amp; travessias épicas, expansão prevista a médio prazo.</div>
         </div>
-        <div class="route-card reveal" data-category="trail">
-          <div class="route-top"><span class="route-name">Sortelha</span><span class="route-type type-trail">Trail</span></div>
-          <div class="route-stats">
-            <div><span class="val mono">27 km</span><span class="lbl">distância</span></div>
-            <div><span class="val mono">760 m</span><span class="lbl">D+</span></div>
+        <div class="route-detail" id="route-detail">
+          <div class="route-detail-head">
+            <div>
+              <span class="route-type mono" id="detail-type">—</span>
+              <h3 id="detail-name">A carregar…</h3>
+            </div>
+            <a class="gpx-download" id="detail-download" href="#" download>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
+              Download GPX
+            </a>
           </div>
-          <div class="diff-bar"><span style="width:50%"></span></div>
-          <div class="status mono">raid histórico · aldeia histórica</div>
-          <a class="gpx-download" href="assets/gpx/sortelha.gpx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
-            Download GPX
-          </a>
-        </div>
-        <div class="route-card reveal" data-category="estrada">
-          <div class="route-top"><span class="route-name">Monsanto</span><span class="route-type type-estrada">Estrada</span></div>
-          <div class="route-stats">
-            <div><span class="val mono">54 km</span><span class="lbl">distância</span></div>
-            <div><span class="val mono">610 m</span><span class="lbl">D+</span></div>
+          <div class="route-canvas">
+            <svg id="route-svg" viewBox="0 0 400 280" preserveAspectRatio="xMidYMid meet"></svg>
+            <p class="canvas-empty mono" id="canvas-empty" hidden></p>
           </div>
-          <div class="diff-bar"><span style="width:40%"></span></div>
-          <div class="status mono">raid histórico · aldeia histórica</div>
-          <a class="gpx-download" href="assets/gpx/monsanto.gpx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
-            Download GPX
-          </a>
-        </div>
-        <div class="route-card reveal" data-category="btt">
-          <div class="route-top"><span class="route-name">Piódão</span><span class="route-type type-btt">BTT</span></div>
-          <div class="route-stats">
-            <div><span class="val mono">46 km</span><span class="lbl">distância</span></div>
-            <div><span class="val mono">1180 m</span><span class="lbl">D+</span></div>
+          <div class="route-detail-stats">
+            <div><span class="val mono" id="detail-dist">—</span><span class="lbl">distância</span></div>
+            <div><span class="val mono" id="detail-elev">—</span><span class="lbl">D+</span></div>
+            <div class="diff-bar-wrap"><span class="lbl mono">dificuldade</span><div class="diff-bar"><span id="detail-diff" style="width:0%"></span></div></div>
           </div>
-          <div class="diff-bar"><span style="width:85%"></span></div>
-          <div class="status mono">raid histórico · travessia serrana</div>
-          <a class="gpx-download" href="assets/gpx/piodao.gpx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
-            Download GPX
-          </a>
-        </div>
-        <div class="route-card reveal" data-category="trail">
-          <div class="route-top"><span class="route-name">Castelo Novo</span><span class="route-type type-trail">Trail</span></div>
-          <div class="route-stats">
-            <div><span class="val mono">22 km</span><span class="lbl">distância</span></div>
-            <div><span class="val mono">540 m</span><span class="lbl">D+</span></div>
-          </div>
-          <div class="diff-bar"><span style="width:35%"></span></div>
-          <div class="status mono">raid histórico · aldeia histórica</div>
-          <a class="gpx-download" href="assets/gpx/castelo-novo.gpx" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
-            Download GPX
-          </a>
-        </div>
-        <div class="route-card reveal" data-category="brevemente" style="align-items:flex-start; justify-content:center; background:transparent; border-style:dashed;">
-          <div class="route-type mono" style="background:none; padding:0; color:#5a6152; font-size:12px;">EM CONSTRUÇÃO</div>
-          <span class="route-name" style="color:#5a6152; font-size:19px;">Bikepacking &amp; travessias épicas</span>
-          <p class="mono" style="font-size:12.5px; color:#7c8570;">Expansão do catálogo prevista a médio prazo.</p>
+          <p class="route-detail-status mono" id="detail-status"></p>
         </div>
       </div>
 
       <p class="empty-state mono" id="routes-empty" hidden>Ainda não há rotas publicadas nesta categoria. Fica atento — o catálogo está em expansão.</p>
 
-      <p class="routes-note">Os ficheiros GPX disponíveis para download são exemplos de marcador de posição. Os tracks reais serão publicados no lançamento do catálogo digital. Utilização por conta e risco do praticante.</p>
+      <p class="routes-note">O traçado é desenhado a partir do ficheiro GPX de cada rota. Os ficheiros atuais são marcadores de posição — os tracks reais serão publicados no lançamento do catálogo digital. Utilização por conta e risco do praticante.</p>
     </div>
   </section>
 
@@ -1022,10 +1024,9 @@
   // Louseiro photo carousel — reads images from assets/images/louseiro/
   // To add more photos: drop the file in that folder and add its path below.
   const louseiroImages = [
-    'assets/images/louseiro/Campo-Multidesportos-do-Louseiro-Cortes-do-Meio.jpg',
-    'assets/images/louseiro/Screenshot 2026-08-05 at 10.15.28.png',
-    'assets/images/louseiro/campo-louseiro.jpg',
-    'assets/images/louseiro/images.jpeg'
+    'assets/images/louseiro/louseiro-1.jpg'
+    // , 'assets/images/louseiro/louseiro-2.jpg'
+    // , 'assets/images/louseiro/louseiro-3.jpg'
   ];
 
   (function initCarousel(){
@@ -1116,27 +1117,161 @@
   }, { threshold: 0.15 });
   revealEls.forEach(el => io.observe(el));
 
-  // Route category filters
+  // ===== Rotas: dados, lista, filtros e traçado GPX =====
+  const ROUTES = [
+    { id:'folgosinho',   name:'Folgosinho',   category:'btt',     typeLabel:'BTT',     distance:'38 km', elevation:'920 m',  diff:65, status:'Raid histórico · aldeia serrana',    gpx:'assets/gpx/folgosinho.gpx' },
+    { id:'sortelha',     name:'Sortelha',     category:'trail',   typeLabel:'Trail',   distance:'27 km', elevation:'760 m',  diff:50, status:'Raid histórico · aldeia histórica',   gpx:'assets/gpx/sortelha.gpx' },
+    { id:'monsanto',     name:'Monsanto',     category:'estrada', typeLabel:'Estrada', distance:'54 km', elevation:'610 m',  diff:40, status:'Raid histórico · aldeia histórica',   gpx:'assets/gpx/monsanto.gpx' },
+    { id:'piodao',       name:'Piódão',       category:'btt',     typeLabel:'BTT',     distance:'46 km', elevation:'1180 m', diff:85, status:'Raid histórico · travessia serrana',  gpx:'assets/gpx/piodao.gpx' },
+    { id:'castelo-novo', name:'Castelo Novo', category:'trail',   typeLabel:'Trail',   distance:'22 km', elevation:'540 m',  diff:35, status:'Raid histórico · aldeia histórica',   gpx:'assets/gpx/castelo-novo.gpx' }
+  ];
+
+  const routesListEl = document.getElementById('routes-list');
   const filterBtns = document.querySelectorAll('.filter-btn');
-  const routeCards = document.querySelectorAll('#route-grid .route-card');
   const routesEmpty = document.getElementById('routes-empty');
+  let activeRouteId = null;
+  let activeFilter = 'todas';
+
+  function renderRoutesList(){
+    routesListEl.innerHTML = '';
+    const visible = ROUTES.filter(r => activeFilter === 'todas' || r.category === activeFilter);
+    visible.forEach(r => {
+      const li = document.createElement('li');
+      li.className = 'route-list-item' + (r.id === activeRouteId ? ' active' : '');
+      li.dataset.id = r.id;
+      li.innerHTML = `<span class="route-list-name">${r.name}</span><span class="route-list-meta mono">${r.typeLabel} · ${r.distance} · ${r.elevation} D+</span>`;
+      li.addEventListener('click', () => selectRoute(r.id));
+      routesListEl.appendChild(li);
+    });
+    routesEmpty.hidden = visible.length !== 0;
+    // if the active route got filtered out, select the first visible one
+    if (visible.length && !visible.find(r => r.id === activeRouteId)){
+      selectRoute(visible[0].id);
+    } else if (!visible.length) {
+      clearDetail();
+    }
+  }
 
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       filterBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
       btn.classList.add('active');
       btn.setAttribute('aria-selected','true');
-      const filter = btn.dataset.filter;
-      let visibleCount = 0;
-      routeCards.forEach(card => {
-        const cat = card.dataset.category;
-        const finalShow = filter === 'todas' ? true : cat === filter;
-        card.style.display = finalShow ? '' : 'none';
-        if (finalShow && cat !== 'brevemente') visibleCount++;
-      });
-      routesEmpty.hidden = visibleCount !== 0;
+      activeFilter = btn.dataset.filter;
+      renderRoutesList();
     });
   });
+
+  const detailType = document.getElementById('detail-type');
+  const detailName = document.getElementById('detail-name');
+  const detailDownload = document.getElementById('detail-download');
+  const detailDist = document.getElementById('detail-dist');
+  const detailElev = document.getElementById('detail-elev');
+  const detailDiff = document.getElementById('detail-diff');
+  const detailStatus = document.getElementById('detail-status');
+  const routeSvg = document.getElementById('route-svg');
+  const canvasEmpty = document.getElementById('canvas-empty');
+
+  function clearDetail(){
+    activeRouteId = null;
+    detailType.textContent = '—';
+    detailType.className = 'route-type mono';
+    detailName.textContent = 'Sem rotas nesta categoria';
+    detailDownload.style.visibility = 'hidden';
+    detailDist.textContent = '—';
+    detailElev.textContent = '—';
+    detailDiff.style.width = '0%';
+    detailStatus.textContent = '';
+    routeSvg.innerHTML = '';
+    canvasEmpty.hidden = true;
+  }
+
+  function selectRoute(id){
+    const route = ROUTES.find(r => r.id === id);
+    if (!route) return;
+    activeRouteId = id;
+
+    routesListEl.querySelectorAll('.route-list-item').forEach(li => {
+      li.classList.toggle('active', li.dataset.id === id);
+    });
+
+    detailType.textContent = route.typeLabel;
+    detailType.className = 'route-type mono type-' + route.category;
+    detailName.textContent = route.name;
+    detailDownload.href = route.gpx;
+    detailDownload.setAttribute('download', '');
+    detailDownload.style.visibility = 'visible';
+    detailDist.textContent = route.distance;
+    detailElev.textContent = route.elevation;
+    detailDiff.style.width = route.diff + '%';
+    detailStatus.textContent = route.status;
+
+    loadTrack(route);
+  }
+
+  async function loadTrack(route){
+    routeSvg.innerHTML = '';
+    canvasEmpty.hidden = true;
+    try {
+      const res = await fetch(route.gpx);
+      if (!res.ok) throw new Error('fetch-failed');
+      const text = await res.text();
+      const xml = new DOMParser().parseFromString(text, 'application/xml');
+      if (xml.querySelector('parsererror')) throw new Error('parse-error');
+
+      const pts = Array.from(xml.querySelectorAll('trkpt, rtept'))
+        .map(pt => ({ lat: parseFloat(pt.getAttribute('lat')), lon: parseFloat(pt.getAttribute('lon')) }))
+        .filter(p => !isNaN(p.lat) && !isNaN(p.lon));
+
+      if (pts.length < 2){
+        canvasEmpty.hidden = false;
+        canvasEmpty.textContent = 'Este GPX é um marcador de posição — ainda sem pontos de traçado.';
+        return;
+      }
+      drawTrack(pts);
+    } catch (err){
+      canvasEmpty.hidden = false;
+      canvasEmpty.textContent = 'Não foi possível carregar o traçado. Se estiveres a abrir o ficheiro localmente, publica o site (ex. Netlify) — os browsers bloqueiam a leitura de ficheiros locais por segurança.';
+    }
+  }
+
+  function drawTrack(points){
+    const W = 400, H = 280, PAD = 24;
+    const lats = points.map(p => p.lat), lons = points.map(p => p.lon);
+    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+    const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+    const latRange = (maxLat - minLat) || 0.0001;
+    const lonRange = (maxLon - minLon) || 0.0001;
+    const scale = Math.min((W - 2*PAD) / lonRange, (H - 2*PAD) / latRange);
+    const offX = PAD + ((W - 2*PAD) - lonRange * scale) / 2;
+    const offY = PAD + ((H - 2*PAD) - latRange * scale) / 2;
+
+    const coords = points.map(p => {
+      const x = offX + (p.lon - minLon) * scale;
+      const y = H - (offY + (p.lat - minLat) * scale);
+      return [x.toFixed(1), y.toFixed(1)];
+    });
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M' + coords.map(c => c.join(',')).join(' L'));
+    path.setAttribute('class', 'track-path');
+    routeSvg.appendChild(path);
+
+    const start = document.createElementNS(ns, 'circle');
+    start.setAttribute('cx', coords[0][0]); start.setAttribute('cy', coords[0][1]);
+    start.setAttribute('r', 5); start.setAttribute('class', 'track-start');
+    routeSvg.appendChild(start);
+
+    const last = coords[coords.length - 1];
+    const end = document.createElementNS(ns, 'circle');
+    end.setAttribute('cx', last[0]); end.setAttribute('cy', last[1]);
+    end.setAttribute('r', 5); end.setAttribute('class', 'track-end');
+    routeSvg.appendChild(end);
+  }
+
+  renderRoutesList();
+  if (ROUTES.length) selectRoute(ROUTES[0].id);
 
   // Route line drawn along scroll progress
   const routePath = document.getElementById('routeline-path');
