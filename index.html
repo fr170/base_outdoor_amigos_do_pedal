@@ -314,11 +314,11 @@
   }
   .route-canvas{
     position:relative; background:var(--pine); border-radius:4px;
-    aspect-ratio:16/10; display:flex; align-items:center; justify-content:center;
+    height:380px; width:100%;
     margin-bottom:22px; overflow:hidden;
   }
   .route-canvas svg{width:100%; height:100%;}
-  #route-map{position:absolute; inset:0; width:100%; height:100%; background:var(--pine);}
+  #route-map{position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:var(--pine); z-index:1;}
   .track-marker{width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 2px rgba(0,0,0,0.3);}
   .track-marker-start{background:var(--olive);}
   .track-marker-end{background:var(--orange-2);}
@@ -328,9 +328,11 @@
     pointer-events:none; letter-spacing:0.02em;
   }
   .canvas-empty{
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    text-align:center; padding:0 30px; font-size:12.5px; color:var(--mist); line-height:1.6;
-    background:var(--pine); z-index:600;
+    position:absolute; left:0; right:0; bottom:0; z-index:600;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:14px 24px; font-size:12px; color:var(--paper); line-height:1.5;
+    background:linear-gradient(to top, rgba(10,17,12,0.92), rgba(10,17,12,0));
+    padding-top:34px;
   }
   .route-detail-stats{display:flex; gap:32px; align-items:center; flex-wrap:wrap; margin-bottom:18px;}
   .route-detail-stats > div{display:flex; flex-direction:column; gap:4px;}
@@ -356,6 +358,7 @@
     .routes-explorer{grid-template-columns:1fr;}
     .routes-list-wrap{border-right:0; border-bottom:1px solid var(--line); max-height:260px;}
     .route-detail{padding:26px 22px;}
+    .route-canvas{height:280px;}
   }
 
   /* Submeter rota */
@@ -1298,21 +1301,37 @@
   }
 
   // ---- Leaflet map (OpenStreetMap tiles — free, no API key) ----
-  let leafletMap, trackLayer, startMarker, endMarker;
+  let leafletMap, trackLayer, startMarker, endMarker, mapInitError = false;
 
   function ensureMap(){
     if (leafletMap) return leafletMap;
-    leafletMap = L.map('route-map', { zoomControl: true, scrollWheelZoom: false });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(leafletMap);
-    leafletMap.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    if (typeof L === 'undefined'){
+      mapInitError = true;
+      return null;
+    }
+    try {
+      leafletMap = L.map('route-map', { zoomControl: true, scrollWheelZoom: false });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(leafletMap);
+      leafletMap.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+      // Leaflet needs a correctly-sized container; the map div can report
+      // zero size on the very first paint, so we nudge it a couple of times.
+      requestAnimationFrame(() => leafletMap.invalidateSize());
+      setTimeout(() => leafletMap.invalidateSize(), 200);
+      window.addEventListener('load', () => leafletMap.invalidateSize());
+    } catch (err){
+      console.error('Falha ao iniciar o mapa Leaflet:', err);
+      mapInitError = true;
+      return null;
+    }
     return leafletMap;
   }
 
   function resetMapView(){
     const map = ensureMap();
+    if (!map) return;
     if (trackLayer){ map.removeLayer(trackLayer); trackLayer = null; }
     if (startMarker){ map.removeLayer(startMarker); startMarker = null; }
     if (endMarker){ map.removeLayer(endMarker); endMarker = null; }
@@ -1322,6 +1341,7 @@
 
   function drawTrackOnMap(points){
     const map = ensureMap();
+    if (!map) return;
     if (trackLayer) map.removeLayer(trackLayer);
     if (startMarker) map.removeLayer(startMarker);
     if (endMarker) map.removeLayer(endMarker);
@@ -1337,23 +1357,30 @@
     setTimeout(() => {
       map.invalidateSize();
       map.fitBounds(trackLayer.getBounds(), { padding: [24, 24] });
-    }, 50);
+    }, 60);
   }
 
   async function showRouteOnMap(route){
     canvasEmpty.hidden = true;
+
+    if (mapInitError || (ensureMap() === null)){
+      canvasEmpty.hidden = false;
+      canvasEmpty.textContent = 'Não foi possível carregar a biblioteca do mapa (Leaflet). Verifica a ligação à internet e recarrega a página.';
+      return;
+    }
+
     const cache = await loadRouteGpx(route);
 
     if (cache.error){
       resetMapView();
       canvasEmpty.hidden = false;
-      canvasEmpty.textContent = 'Não foi possível carregar o mapa/traçado. Se estiveres a abrir o ficheiro localmente, publica o site (ex. Netlify) — os browsers bloqueiam a leitura de ficheiros locais por segurança.';
+      canvasEmpty.textContent = 'Traçado não disponível — se estiveres a abrir o ficheiro localmente (duplo-clique), os browsers bloqueiam a leitura de GPX por segurança. Publica o site (ex. Netlify) para veres os tracks. O mapa em baixo continua a funcionar normalmente.';
       return;
     }
     if (cache.points.length < 2){
       resetMapView();
       canvasEmpty.hidden = false;
-      canvasEmpty.textContent = 'Este GPX é um marcador de posição — ainda sem pontos de traçado. O mapa mostra a região do Louseiro.';
+      canvasEmpty.textContent = 'Este GPX é um marcador de posição — ainda sem pontos de traçado.';
       return;
     }
     drawTrackOnMap(cache.points);
