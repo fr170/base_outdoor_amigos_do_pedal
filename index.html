@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
   :root{
     --pine:#131f17;
@@ -317,12 +318,19 @@
     margin-bottom:22px; overflow:hidden;
   }
   .route-canvas svg{width:100%; height:100%;}
-  .track-path{fill:none; stroke:var(--orange-2); stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;}
-  .track-start{fill:var(--olive);}
-  .track-end{fill:var(--orange-2);}
+  #route-map{position:absolute; inset:0; width:100%; height:100%; background:var(--pine);}
+  .track-marker{width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 2px rgba(0,0,0,0.3);}
+  .track-marker-start{background:var(--olive);}
+  .track-marker-end{background:var(--orange-2);}
+  .map-caption{
+    position:absolute; left:10px; bottom:8px; z-index:500;
+    font-family:'IBM Plex Mono', monospace; font-size:9.5px; color:rgba(250,247,238,0.55);
+    pointer-events:none; letter-spacing:0.02em;
+  }
   .canvas-empty{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     text-align:center; padding:0 30px; font-size:12.5px; color:var(--mist); line-height:1.6;
+    background:var(--pine); z-index:600;
   }
   .route-detail-stats{display:flex; gap:32px; align-items:center; flex-wrap:wrap; margin-bottom:18px;}
   .route-detail-stats > div{display:flex; flex-direction:column; gap:4px;}
@@ -702,7 +710,7 @@
           <div class="eyebrow">Rotas GPX</div>
           <h2 class="h-title">O histórico que<br>já percorremos</h2>
         </div>
-        <p class="mono" style="max-width:340px; font-size:13px; color:#5a6152;">Seleciona uma rota na lista para veres o traçado e descarregares o ficheiro GPX.</p>
+        <p class="mono" style="max-width:340px; font-size:13px; color:#5a6152;">Seleciona uma rota na lista para veres o traçado no mapa e descarregares o ficheiro GPX.</p>
       </div>
 
       <div class="route-filters reveal" role="tablist" aria-label="Filtrar rotas por categoria">
@@ -730,12 +738,13 @@
             </a>
           </div>
           <div class="route-canvas">
-            <svg id="route-svg" viewBox="0 0 400 280" preserveAspectRatio="xMidYMid meet"></svg>
+            <div id="route-map"></div>
+            <span class="map-caption">© OpenStreetMap</span>
             <p class="canvas-empty mono" id="canvas-empty" hidden></p>
           </div>
           <div class="route-detail-stats">
-            <div><span class="val mono" id="detail-dist">—</span><span class="lbl">distância</span></div>
-            <div><span class="val mono" id="detail-elev">—</span><span class="lbl">D+</span></div>
+            <div><span class="val mono" id="detail-dist">—</span><span class="lbl">distância<span id="detail-dist-flag"></span></span></div>
+            <div><span class="val mono" id="detail-elev">—</span><span class="lbl">D+<span id="detail-elev-flag"></span></span></div>
             <div class="diff-bar-wrap"><span class="lbl mono">dificuldade</span><div class="diff-bar"><span id="detail-diff" style="width:0%"></span></div></div>
           </div>
           <p class="route-detail-status mono" id="detail-status"></p>
@@ -744,7 +753,7 @@
 
       <p class="empty-state mono" id="routes-empty" hidden>Ainda não há rotas publicadas nesta categoria. Fica atento — o catálogo está em expansão.</p>
 
-      <p class="routes-note">O traçado é desenhado a partir do ficheiro GPX de cada rota. Os ficheiros atuais são marcadores de posição — os tracks reais serão publicados no lançamento do catálogo digital. Utilização por conta e risco do praticante.</p>
+      <p class="routes-note">Distância e desnível são calculados automaticamente a partir dos pontos do próprio ficheiro GPX. Enquanto um GPX for apenas um marcador de posição (sem traçado), mostramos uma estimativa manual, assinalada com *. Utilização por conta e risco do praticante.</p>
     </div>
   </section>
 
@@ -952,6 +961,7 @@
   </div>
 </footer>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
   // GPX submission form
   const gpxForm = document.getElementById('gpx-form');
@@ -1011,8 +1021,6 @@
       submitBtn.textContent = 'Enviar para revisão';
       submitBtn.disabled = false;
     } catch (err) {
-      // Fallback for hosting without a form backend (e.g. opening the file locally,
-      // or a static host that isn't wired to Netlify Forms / an upload endpoint).
       formStatus.hidden = false;
       formStatus.className = 'form-status mono err';
       formStatus.innerHTML = 'Não foi possível submeter automaticamente. Envia o ficheiro por email para <a href="mailto:geral@amigosdopedal.pt?subject=Submiss%C3%A3o%20de%20rota%20GPX" style="color:var(--orange); text-decoration:underline;">geral@amigosdopedal.pt</a> com o .gpx em anexo.';
@@ -1021,25 +1029,20 @@
     }
   });
 
-  // Louseiro photo carousel — images are fetched automatically from
-  // assets/images/louseiro/ via a serverless function. Drop a new photo in
-  // that folder and it appears in the carousel on the next deploy.
-  (async function initCarousel(){
+  // Louseiro photo carousel
+  const louseiroImages = [
+    'assets/images/louseiro/louseiro-1.jpg'
+    // , 'assets/images/louseiro/louseiro-2.jpg'
+    // , 'assets/images/louseiro/louseiro-3.jpg'
+  ];
+
+  (function initCarousel(){
     const root = document.getElementById('louseiro-carousel');
     const track = document.getElementById('carousel-track');
     const dotsWrap = document.getElementById('carousel-dots');
     const prevBtn = root.querySelector('.carousel-arrow.prev');
     const nextBtn = root.querySelector('.carousel-arrow.next');
-    if (!root || !track) return;
-
-    let louseiroImages = [];
-    try {
-      const res = await fetch('/.netlify/functions/louseiro-images');
-      if (res.ok) louseiroImages = await res.json();
-    } catch (err) {
-      console.error('Não foi possível carregar as fotos do Louseiro:', err);
-    }
-    if (louseiroImages.length === 0) return;
+    if (!root || !track || louseiroImages.length === 0) return;
 
     let current = 0;
     let timer;
@@ -1121,7 +1124,7 @@
   }, { threshold: 0.15 });
   revealEls.forEach(el => io.observe(el));
 
-  // ===== Rotas: dados, lista, filtros e traçado GPX =====
+  // ===== Rotas: dados base, lista, filtros, GPX (traçado + estatísticas) e mapa =====
   const ROUTES = [
     { id:'folgosinho',   name:'Folgosinho',   category:'btt',     typeLabel:'BTT',     distance:'38 km', elevation:'920 m',  diff:65, status:'Raid histórico · aldeia serrana',    gpx:'assets/gpx/folgosinho.gpx' },
     { id:'sortelha',     name:'Sortelha',     category:'trail',   typeLabel:'Trail',   distance:'27 km', elevation:'760 m',  diff:50, status:'Raid histórico · aldeia histórica',   gpx:'assets/gpx/sortelha.gpx' },
@@ -1129,6 +1132,71 @@
     { id:'piodao',       name:'Piódão',       category:'btt',     typeLabel:'BTT',     distance:'46 km', elevation:'1180 m', diff:85, status:'Raid histórico · travessia serrana',  gpx:'assets/gpx/piodao.gpx' },
     { id:'castelo-novo', name:'Castelo Novo', category:'trail',   typeLabel:'Trail',   distance:'22 km', elevation:'540 m',  diff:35, status:'Raid histórico · aldeia histórica',   gpx:'assets/gpx/castelo-novo.gpx' }
   ];
+  // distance/elevation acima = estimativas manuais, usadas apenas como reserva
+  // enquanto o respetivo .gpx não tiver pontos de traçado reais.
+
+  const DEFAULT_CENTER = [40.2500, -7.5500]; // Cortes do Meio / Serra da Estrela
+  const DEFAULT_ZOOM = 11;
+
+  function haversineMeters(lat1, lon1, lat2, lon2){
+    const R = 6371000;
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function computeTrackStats(points){
+    let distM = 0, gain = 0;
+    for (let i = 1; i < points.length; i++){
+      distM += haversineMeters(points[i-1].lat, points[i-1].lon, points[i].lat, points[i].lon);
+      if (points[i].ele != null && points[i-1].ele != null){
+        const delta = points[i].ele - points[i-1].ele;
+        if (delta > 0) gain += delta;
+      }
+    }
+    return { distanceKm: distM / 1000, elevationGain: Math.round(gain) };
+  }
+
+  // Fetches + parses a route's GPX once, caches the result on the route object.
+  async function loadRouteGpx(route){
+    if (route._gpxCache) return route._gpxCache;
+    try {
+      const res = await fetch(route.gpx);
+      if (!res.ok) throw new Error('fetch-failed');
+      const text = await res.text();
+      const xml = new DOMParser().parseFromString(text, 'application/xml');
+      if (xml.querySelector('parsererror')) throw new Error('parse-error');
+
+      const points = Array.from(xml.querySelectorAll('trkpt, rtept')).map(pt => {
+        const eleEl = pt.querySelector('ele');
+        return {
+          lat: parseFloat(pt.getAttribute('lat')),
+          lon: parseFloat(pt.getAttribute('lon')),
+          ele: eleEl ? parseFloat(eleEl.textContent) : null
+        };
+      }).filter(p => !isNaN(p.lat) && !isNaN(p.lon));
+
+      const stats = points.length >= 2 ? computeTrackStats(points) : null;
+      route._gpxCache = { points, stats, error: null };
+    } catch (err){
+      route._gpxCache = { points: [], stats: null, error: err.message || 'error' };
+    }
+    return route._gpxCache;
+  }
+
+  function displayStats(route){
+    const cache = route._gpxCache;
+    if (cache && cache.stats){
+      return {
+        distance: cache.stats.distanceKm.toFixed(1) + ' km',
+        elevation: Math.round(cache.stats.elevationGain) + ' m',
+        computed: true
+      };
+    }
+    return { distance: route.distance, elevation: route.elevation, computed: false };
+  }
 
   const routesListEl = document.getElementById('routes-list');
   const filterBtns = document.querySelectorAll('.filter-btn');
@@ -1140,15 +1208,15 @@
     routesListEl.innerHTML = '';
     const visible = ROUTES.filter(r => activeFilter === 'todas' || r.category === activeFilter);
     visible.forEach(r => {
+      const s = displayStats(r);
       const li = document.createElement('li');
       li.className = 'route-list-item' + (r.id === activeRouteId ? ' active' : '');
       li.dataset.id = r.id;
-      li.innerHTML = `<span class="route-list-name">${r.name}</span><span class="route-list-meta mono">${r.typeLabel} · ${r.distance} · ${r.elevation} D+</span>`;
+      li.innerHTML = `<span class="route-list-name">${r.name}</span><span class="route-list-meta mono">${r.typeLabel} · ${s.distance} · ${s.elevation} D+${s.computed ? '' : ' *'}</span>`;
       li.addEventListener('click', () => selectRoute(r.id));
       routesListEl.appendChild(li);
     });
     routesEmpty.hidden = visible.length !== 0;
-    // if the active route got filtered out, select the first visible one
     if (visible.length && !visible.find(r => r.id === activeRouteId)){
       selectRoute(visible[0].id);
     } else if (!visible.length) {
@@ -1171,9 +1239,10 @@
   const detailDownload = document.getElementById('detail-download');
   const detailDist = document.getElementById('detail-dist');
   const detailElev = document.getElementById('detail-elev');
+  const detailDistFlag = document.getElementById('detail-dist-flag');
+  const detailElevFlag = document.getElementById('detail-elev-flag');
   const detailDiff = document.getElementById('detail-diff');
   const detailStatus = document.getElementById('detail-status');
-  const routeSvg = document.getElementById('route-svg');
   const canvasEmpty = document.getElementById('canvas-empty');
 
   function clearDetail(){
@@ -1184,13 +1253,15 @@
     detailDownload.style.visibility = 'hidden';
     detailDist.textContent = '—';
     detailElev.textContent = '—';
+    detailDistFlag.textContent = '';
+    detailElevFlag.textContent = '';
     detailDiff.style.width = '0%';
     detailStatus.textContent = '';
-    routeSvg.innerHTML = '';
+    resetMapView();
     canvasEmpty.hidden = true;
   }
 
-  function selectRoute(id){
+  async function selectRoute(id){
     const route = ROUTES.find(r => r.id === id);
     if (!route) return;
     activeRouteId = id;
@@ -1205,77 +1276,96 @@
     detailDownload.href = route.gpx;
     detailDownload.setAttribute('download', '');
     detailDownload.style.visibility = 'visible';
-    detailDist.textContent = route.distance;
-    detailElev.textContent = route.elevation;
     detailDiff.style.width = route.diff + '%';
     detailStatus.textContent = route.status;
 
-    loadTrack(route);
+    const s = displayStats(route);
+    detailDist.textContent = s.distance;
+    detailElev.textContent = s.elevation;
+    detailDistFlag.textContent = s.computed ? '' : ' *';
+    detailElevFlag.textContent = s.computed ? '' : ' *';
+
+    await showRouteOnMap(route);
+
+    // Recompute stats + list once the GPX for this route has loaded (covers
+    // the case where the click happened before the background fetch resolved).
+    const s2 = displayStats(route);
+    detailDist.textContent = s2.distance;
+    detailElev.textContent = s2.elevation;
+    detailDistFlag.textContent = s2.computed ? '' : ' *';
+    detailElevFlag.textContent = s2.computed ? '' : ' *';
+    renderRoutesList();
   }
 
-  async function loadTrack(route){
-    routeSvg.innerHTML = '';
+  // ---- Leaflet map (OpenStreetMap tiles — free, no API key) ----
+  let leafletMap, trackLayer, startMarker, endMarker;
+
+  function ensureMap(){
+    if (leafletMap) return leafletMap;
+    leafletMap = L.map('route-map', { zoomControl: true, scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(leafletMap);
+    leafletMap.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    return leafletMap;
+  }
+
+  function resetMapView(){
+    const map = ensureMap();
+    if (trackLayer){ map.removeLayer(trackLayer); trackLayer = null; }
+    if (startMarker){ map.removeLayer(startMarker); startMarker = null; }
+    if (endMarker){ map.removeLayer(endMarker); endMarker = null; }
+    map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    setTimeout(() => map.invalidateSize(), 50);
+  }
+
+  function drawTrackOnMap(points){
+    const map = ensureMap();
+    if (trackLayer) map.removeLayer(trackLayer);
+    if (startMarker) map.removeLayer(startMarker);
+    if (endMarker) map.removeLayer(endMarker);
+
+    const latlngs = points.map(p => [p.lat, p.lon]);
+    trackLayer = L.polyline(latlngs, { color: '#ff7a3d', weight: 4, opacity: 0.95 }).addTo(map);
+
+    const startIcon = L.divIcon({ className: 'track-marker track-marker-start', iconSize: [12, 12] });
+    const endIcon = L.divIcon({ className: 'track-marker track-marker-end', iconSize: [12, 12] });
+    startMarker = L.marker(latlngs[0], { icon: startIcon }).addTo(map);
+    endMarker = L.marker(latlngs[latlngs.length - 1], { icon: endIcon }).addTo(map);
+
+    setTimeout(() => {
+      map.invalidateSize();
+      map.fitBounds(trackLayer.getBounds(), { padding: [24, 24] });
+    }, 50);
+  }
+
+  async function showRouteOnMap(route){
     canvasEmpty.hidden = true;
-    try {
-      const res = await fetch(route.gpx);
-      if (!res.ok) throw new Error('fetch-failed');
-      const text = await res.text();
-      const xml = new DOMParser().parseFromString(text, 'application/xml');
-      if (xml.querySelector('parsererror')) throw new Error('parse-error');
+    const cache = await loadRouteGpx(route);
 
-      const pts = Array.from(xml.querySelectorAll('trkpt, rtept'))
-        .map(pt => ({ lat: parseFloat(pt.getAttribute('lat')), lon: parseFloat(pt.getAttribute('lon')) }))
-        .filter(p => !isNaN(p.lat) && !isNaN(p.lon));
-
-      if (pts.length < 2){
-        canvasEmpty.hidden = false;
-        canvasEmpty.textContent = 'Este GPX é um marcador de posição — ainda sem pontos de traçado.';
-        return;
-      }
-      drawTrack(pts);
-    } catch (err){
+    if (cache.error){
+      resetMapView();
       canvasEmpty.hidden = false;
-      canvasEmpty.textContent = 'Não foi possível carregar o traçado. Se estiveres a abrir o ficheiro localmente, publica o site (ex. Netlify) — os browsers bloqueiam a leitura de ficheiros locais por segurança.';
+      canvasEmpty.textContent = 'Não foi possível carregar o mapa/traçado. Se estiveres a abrir o ficheiro localmente, publica o site (ex. Netlify) — os browsers bloqueiam a leitura de ficheiros locais por segurança.';
+      return;
     }
+    if (cache.points.length < 2){
+      resetMapView();
+      canvasEmpty.hidden = false;
+      canvasEmpty.textContent = 'Este GPX é um marcador de posição — ainda sem pontos de traçado. O mapa mostra a região do Louseiro.';
+      return;
+    }
+    drawTrackOnMap(cache.points);
   }
 
-  function drawTrack(points){
-    const W = 400, H = 280, PAD = 24;
-    const lats = points.map(p => p.lat), lons = points.map(p => p.lon);
-    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-    const minLon = Math.min(...lons), maxLon = Math.max(...lons);
-    const latRange = (maxLat - minLat) || 0.0001;
-    const lonRange = (maxLon - minLon) || 0.0001;
-    const scale = Math.min((W - 2*PAD) / lonRange, (H - 2*PAD) / latRange);
-    const offX = PAD + ((W - 2*PAD) - lonRange * scale) / 2;
-    const offY = PAD + ((H - 2*PAD) - latRange * scale) / 2;
-
-    const coords = points.map(p => {
-      const x = offX + (p.lon - minLon) * scale;
-      const y = H - (offY + (p.lat - minLat) * scale);
-      return [x.toFixed(1), y.toFixed(1)];
-    });
-
-    const ns = 'http://www.w3.org/2000/svg';
-    const path = document.createElementNS(ns, 'path');
-    path.setAttribute('d', 'M' + coords.map(c => c.join(',')).join(' L'));
-    path.setAttribute('class', 'track-path');
-    routeSvg.appendChild(path);
-
-    const start = document.createElementNS(ns, 'circle');
-    start.setAttribute('cx', coords[0][0]); start.setAttribute('cy', coords[0][1]);
-    start.setAttribute('r', 5); start.setAttribute('class', 'track-start');
-    routeSvg.appendChild(start);
-
-    const last = coords[coords.length - 1];
-    const end = document.createElementNS(ns, 'circle');
-    end.setAttribute('cx', last[0]); end.setAttribute('cy', last[1]);
-    end.setAttribute('r', 5); end.setAttribute('class', 'track-end');
-    routeSvg.appendChild(end);
-  }
-
-  renderRoutesList();
-  if (ROUTES.length) selectRoute(ROUTES[0].id);
+  // Init: pré-carrega todos os GPX (para a lista já nascer com valores calculados),
+  // depois desenha a lista e seleciona a primeira rota.
+  (async function initRoutes(){
+    await Promise.all(ROUTES.map(r => loadRouteGpx(r)));
+    renderRoutesList();
+    if (ROUTES.length) selectRoute(ROUTES[0].id);
+  })();
 
   // Route line drawn along scroll progress
   const routePath = document.getElementById('routeline-path');
