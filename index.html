@@ -317,7 +317,9 @@
     height:380px; width:100%;
     margin-bottom:22px; overflow:hidden;
   }
-  .route-canvas svg{width:100%; height:100%;}
+  /* (a antiga regra .route-canvas svg{...} foi removida — estava a forçar
+     100%/100% em QUALQUER svg dentro do mapa, incluindo o SVG interno que o
+     Leaflet usa para desenhar a polyline do traçado, o que a tornava invisível) */
   #route-map{position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:var(--pine); z-index:1;}
   .track-marker{width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 2px rgba(0,0,0,0.3);}
   .track-marker-start{background:var(--olive);}
