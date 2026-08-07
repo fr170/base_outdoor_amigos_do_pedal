@@ -312,6 +312,9 @@
   .route-detail-head h3{
     font-family:'Anton', sans-serif; font-size:30px; text-transform:uppercase; color:var(--paper); margin-top:8px;
   }
+  .detail-description{
+    font-size:14.5px; color:var(--mist); max-width:560px; margin-bottom:20px; line-height:1.6;
+  }
   .route-canvas{
     position:relative; background:var(--pine); border-radius:4px;
     height:380px; width:100%;
@@ -742,6 +745,7 @@
               Download GPX
             </a>
           </div>
+          <p class="detail-description" id="detail-description"></p>
           <div class="route-canvas">
             <div id="route-map"></div>
             <span class="map-caption">© OpenStreetMap</span>
@@ -1130,15 +1134,12 @@
   revealEls.forEach(el => io.observe(el));
 
   // ===== Rotas: dados base, lista, filtros, GPX (traçado + estatísticas) e mapa =====
-  const ROUTES = [
-    { id:'folgosinho',   name:'Folgosinho',   category:'btt',     typeLabel:'BTT',     distance:'38 km', elevation:'920 m',  diff:65, status:'Raid histórico · aldeia serrana',    gpx:'assets/gpx/folgosinho.gpx' },
-    { id:'sortelha',     name:'Sortelha',     category:'trail',   typeLabel:'Trail',   distance:'27 km', elevation:'760 m',  diff:50, status:'Raid histórico · aldeia histórica',   gpx:'assets/gpx/sortelha.gpx' },
-    { id:'monsanto',     name:'Monsanto',     category:'estrada', typeLabel:'Estrada', distance:'54 km', elevation:'610 m',  diff:40, status:'Raid histórico · aldeia histórica',   gpx:'assets/gpx/monsanto.gpx' },
-    { id:'piodao',       name:'Piódão',       category:'btt',     typeLabel:'BTT',     distance:'46 km', elevation:'1180 m', diff:85, status:'Raid histórico · travessia serrana',  gpx:'assets/gpx/piodao.gpx' },
-    { id:'castelo-novo', name:'Castelo Novo', category:'trail',   typeLabel:'Trail',   distance:'22 km', elevation:'540 m',  diff:35, status:'Raid histórico · aldeia histórica',   gpx:'assets/gpx/castelo-novo.gpx' }
-  ];
-  // distance/elevation acima = estimativas manuais, usadas apenas como reserva
-  // enquanto o respetivo .gpx não tiver pontos de traçado reais.
+  const ROUTES_DB_PATH = 'assets/data/routes.json';
+  let ROUTES = [];
+  // O catálogo de rotas vive agora em assets/data/routes.json — cada objeto
+  // tem id, name, category, typeLabel, description, status, distance,
+  // elevation, diff e gpx. distance/elevation aí são só a reserva manual,
+  // usada enquanto o respetivo .gpx não tiver pontos de traçado reais.
 
   const DEFAULT_CENTER = [40.2500, -7.5500]; // Cortes do Meio / Serra da Estrela
   const DEFAULT_ZOOM = 11;
@@ -1271,6 +1272,7 @@
 
   const detailType = document.getElementById('detail-type');
   const detailName = document.getElementById('detail-name');
+  const detailDescription = document.getElementById('detail-description');
   const detailDownload = document.getElementById('detail-download');
   const detailDist = document.getElementById('detail-dist');
   const detailElev = document.getElementById('detail-elev');
@@ -1285,6 +1287,7 @@
     detailType.textContent = '—';
     detailType.className = 'route-type mono';
     detailName.textContent = 'Sem rotas nesta categoria';
+    detailDescription.textContent = '';
     detailDownload.style.visibility = 'hidden';
     detailDist.textContent = '—';
     detailElev.textContent = '—';
@@ -1308,6 +1311,7 @@
     detailType.textContent = route.typeLabel;
     detailType.className = 'route-type mono type-' + route.category;
     detailName.textContent = route.name;
+    detailDescription.textContent = route.description || '';
     detailDownload.href = route.gpx;
     detailDownload.setAttribute('download', '');
     detailDownload.style.visibility = 'visible';
@@ -1421,9 +1425,20 @@
     drawTrackOnMap(cache.points);
   }
 
-  // Init: pré-carrega todos os GPX (para a lista já nascer com valores calculados),
-  // depois desenha a lista e seleciona a primeira rota.
+  // Init: 1) vai buscar o catálogo de rotas ao routes.json, 2) pré-carrega
+  // todos os GPX (para a lista já nascer com valores calculados), 3) desenha
+  // a lista e seleciona a primeira rota.
   (async function initRoutes(){
+    try {
+      const res = await fetch(ROUTES_DB_PATH, { cache: 'no-store' });
+      if (!res.ok) throw new Error('fetch-failed:' + res.status);
+      ROUTES = await res.json();
+    } catch (err){
+      console.error('[Base Outdoor] Não consegui carregar assets/data/routes.json:', err);
+      routesEmpty.hidden = false;
+      routesEmpty.textContent = 'Não foi possível carregar o catálogo de rotas (assets/data/routes.json). Verifica se o ficheiro existe e está publicado.';
+      return;
+    }
     await Promise.all(ROUTES.map(r => loadRouteGpx(r)));
     renderRoutesList();
     if (ROUTES.length) selectRoute(ROUTES[0].id);
