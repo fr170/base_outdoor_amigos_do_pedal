@@ -1,14 +1,14 @@
 [
   {
-    "id": "folgosinho",
-    "name": "Folgosinho",
+    "id": "noturno-torre",
+    "name": "BTT Noturno za Torre - 3ª Edição",
     "category": "btt",
     "typeLabel": "BTT",
-    "description": "Percurso de BTT que sobe desde o Louseiro até à aldeia serrana de Folgosinho, atravessando trilhos de montanha com boa exposição na Serra da Estrela.",
+    "description": "Percurso de BTT noturno que sobe desde Cortes do Meio até à Torre, atravessando trilhos de montanha com boa exposição na Serra da Estrela.",
     "status": "Raid histórico · aldeia serrana",
     "distance": "38 km",
     "elevation": "920 m",
     "diff": 65,
-    "gpx": "assets/gpx/folgosinho.gpx"
+    "gpx": "assets/gpx/noturno-torre.gpx"
   }
 ]
