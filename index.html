@@ -1163,27 +1163,57 @@
   }
 
   // Fetches + parses a route's GPX once, caches the result on the route object.
+  function extractGpxPoints(xml){
+    // 1) Fast path: works in virtually all browsers even though GPX declares
+    //    a default namespace, because unprefixed type selectors match on
+    //    local name here.
+    let nodes = Array.from(xml.querySelectorAll('trkpt, rtept'));
+
+    // 2) Fallback: explicit namespace lookup (GPX 1.1 then 1.0), in case the
+    //    file uses a namespace prefix (e.g. <gpx:trkpt>) or a picky parser.
+    if (nodes.length === 0){
+      for (const ns of ['http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/0']){
+        const trk = Array.from(xml.getElementsByTagNameNS(ns, 'trkpt'));
+        const rte = Array.from(xml.getElementsByTagNameNS(ns, 'rtept'));
+        if (trk.length || rte.length){ nodes = trk.concat(rte); break; }
+      }
+    }
+
+    // 3) Last resort: scan every element and match by local name, ignoring
+    //    namespace/prefix entirely.
+    if (nodes.length === 0){
+      nodes = Array.from(xml.getElementsByTagName('*'))
+        .filter(el => el.localName === 'trkpt' || el.localName === 'rtept');
+    }
+
+    return nodes.map(pt => {
+      const eleEl = Array.from(pt.getElementsByTagName('*')).find(c => c.localName === 'ele');
+      return {
+        lat: parseFloat(pt.getAttribute('lat')),
+        lon: parseFloat(pt.getAttribute('lon')),
+        ele: eleEl ? parseFloat(eleEl.textContent) : null
+      };
+    }).filter(p => !isNaN(p.lat) && !isNaN(p.lon));
+  }
+
   async function loadRouteGpx(route){
     if (route._gpxCache) return route._gpxCache;
     try {
-      const res = await fetch(route.gpx);
-      if (!res.ok) throw new Error('fetch-failed');
+      // cache: 'no-store' avoids the browser silently serving a stale copy
+      // of the .gpx after you've replaced the file on the server.
+      const res = await fetch(route.gpx, { cache: 'no-store' });
+      if (!res.ok) throw new Error('fetch-failed:' + res.status);
       const text = await res.text();
       const xml = new DOMParser().parseFromString(text, 'application/xml');
       if (xml.querySelector('parsererror')) throw new Error('parse-error');
 
-      const points = Array.from(xml.querySelectorAll('trkpt, rtept')).map(pt => {
-        const eleEl = pt.querySelector('ele');
-        return {
-          lat: parseFloat(pt.getAttribute('lat')),
-          lon: parseFloat(pt.getAttribute('lon')),
-          ele: eleEl ? parseFloat(eleEl.textContent) : null
-        };
-      }).filter(p => !isNaN(p.lat) && !isNaN(p.lon));
+      const points = extractGpxPoints(xml);
+      console.log(`[Base Outdoor] ${route.gpx} → ${points.length} pontos encontrados`, points[0] || null);
 
       const stats = points.length >= 2 ? computeTrackStats(points) : null;
       route._gpxCache = { points, stats, error: null };
     } catch (err){
+      console.error(`[Base Outdoor] Falha ao carregar ${route.gpx}:`, err);
       route._gpxCache = { points: [], stats: null, error: err.message || 'error' };
     }
     return route._gpxCache;
@@ -1374,13 +1404,16 @@
     if (cache.error){
       resetMapView();
       canvasEmpty.hidden = false;
-      canvasEmpty.textContent = 'Traçado não disponível — se estiveres a abrir o ficheiro localmente (duplo-clique), os browsers bloqueiam a leitura de GPX por segurança. Publica o site (ex. Netlify) para veres os tracks. O mapa em baixo continua a funcionar normalmente.';
+      const is404 = cache.error.includes('fetch-failed');
+      canvasEmpty.textContent = is404
+        ? `Não consegui encontrar/ler ${route.gpx} (erro: ${cache.error}). Confirma o nome exato do ficheiro e o caminho, ou se estás a abrir localmente por duplo-clique (o browser bloqueia isso — publica o site para testar).`
+        : `Não consegui interpretar ${route.gpx} como GPX válido (${cache.error}). Abre a consola do browser (F12) para mais detalhes.`;
       return;
     }
     if (cache.points.length < 2){
       resetMapView();
       canvasEmpty.hidden = false;
-      canvasEmpty.textContent = 'Este GPX é um marcador de posição — ainda sem pontos de traçado.';
+      canvasEmpty.textContent = `O ficheiro ${route.gpx} carregou, mas não encontrei pontos de traçado (<trkpt>/<rtept>) lá dentro. Confirma que o GPX exportado tem mesmo um track ou route, não só waypoints.`;
       return;
     }
     drawTrackOnMap(cache.points);
