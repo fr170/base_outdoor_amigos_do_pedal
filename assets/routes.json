@@ -1,0 +1,14 @@
+[
+  {
+    "id": "folgosinho",
+    "name": "Folgosinho",
+    "category": "btt",
+    "typeLabel": "BTT",
+    "description": "Percurso de BTT que sobe desde o Louseiro até à aldeia serrana de Folgosinho, atravessando trilhos de montanha com boa exposição na Serra da Estrela.",
+    "status": "Raid histórico · aldeia serrana",
+    "distance": "38 km",
+    "elevation": "920 m",
+    "diff": 65,
+    "gpx": "assets/gpx/folgosinho.gpx"
+  }
+]
