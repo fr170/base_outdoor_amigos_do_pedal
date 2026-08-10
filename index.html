@@ -355,6 +355,14 @@
   }
   .gpx-download svg{width:15px; height:15px;}
   .gpx-download:hover{background:var(--orange); color:var(--pine);}
+  .download-action{display:flex; align-items:center; gap:10px;}
+  .dl-count{
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:11px; color:#8a9a5b; white-space:nowrap;
+  }
+  .dl-count svg{width:12px; height:12px;}
+  .dl-count:empty{display:none;}
+  .route-list-item .dl-count{margin-top:2px; color:#7c8f77;}
   .routes-note{
     margin-top:28px; font-family:'IBM Plex Mono', monospace; font-size:13px; color:#6b7362;
     max-width:640px;
@@ -740,10 +748,13 @@
               <span class="route-type mono" id="detail-type">—</span>
               <h3 id="detail-name">A carregar…</h3>
             </div>
-            <a class="gpx-download" id="detail-download" href="#" download>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
-              Download GPX
-            </a>
+            <div class="download-action">
+              <a class="gpx-download" id="detail-download" href="#" download>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4 V15 M7 11 L12 16 L17 11 M5 20 H19"/></svg>
+                Download GPX
+              </a>
+              <span class="dl-count mono" id="dl-count-detail" title="Downloads deste GPX"></span>
+            </div>
           </div>
           <p class="detail-description" id="detail-description"></p>
           <div class="route-canvas">
@@ -1133,6 +1144,58 @@
   }, { threshold: 0.15 });
   revealEls.forEach(el => io.observe(el));
 
+  // ===== Contador de downloads de GPX (Abacus — serviço gratuito e sem registo) =====
+  // ATENÇÃO: é um serviço de terceiros, comunitário e sem SLA garantido; os
+  // valores são tecnicamente públicos para quem souber a chave. Suficiente
+  // para um contador informal — se um dia precisares de algo mais robusto,
+  // troca esta camada por uma Netlify Function + Netlify Blobs.
+  const COUNTER_API = 'https://abacus.jasoncameron.dev';
+  const COUNTER_NS = 'amigosdopedal-baseoutdoor-cortesdomeio'; // namespace único, para não colidir com outros sites
+  const downloadCounts = {}; // routeId -> número (undefined = a carregar, null = serviço indisponível)
+
+  function downloadBadgeHTML(id){
+    const val = downloadCounts[id];
+    if (val === undefined || val === null) return '';
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4 V14 M7 10 L12 15 L17 10 M5 19 H19"/></svg><span>${val}</span>`;
+  }
+
+  function updateDownloadBadges(id){
+    const listBadge = document.getElementById('dl-count-list-' + id);
+    if (listBadge) listBadge.innerHTML = downloadBadgeHTML(id);
+    const detailBadge = document.getElementById('dl-count-detail');
+    if (detailBadge && activeRouteId === id) detailBadge.innerHTML = downloadBadgeHTML(id);
+  }
+
+  async function fetchDownloadCount(id){
+    try {
+      const res = await fetch(`${COUNTER_API}/get/${COUNTER_NS}/${id}`);
+      if (res.ok){
+        const data = await res.json();
+        downloadCounts[id] = data.value || 0;
+      } else {
+        downloadCounts[id] = 0; // ainda ninguém fez download desta rota
+      }
+    } catch (err){
+      console.error('[Base Outdoor] Contador de downloads indisponível:', err);
+      downloadCounts[id] = null; // serviço em baixo — escondemos o contador discretamente
+    }
+    updateDownloadBadges(id);
+  }
+
+  async function registerDownload(id){
+    try {
+      const res = await fetch(`${COUNTER_API}/hit/${COUNTER_NS}/${id}`);
+      if (res.ok){
+        const data = await res.json();
+        downloadCounts[id] = data.value;
+        updateDownloadBadges(id);
+      }
+    } catch (err){
+      console.error('[Base Outdoor] Não foi possível registar o download:', err);
+      // falha silenciosa — nunca deve impedir o download em si
+    }
+  }
+
   // ===== Rotas: dados base, lista, filtros, GPX (traçado + estatísticas) e mapa =====
   const ROUTES_DB_PATH = 'assets/data/routes.json';
   let ROUTES = [];
@@ -1248,7 +1311,7 @@
       const li = document.createElement('li');
       li.className = 'route-list-item' + (r.id === activeRouteId ? ' active' : '');
       li.dataset.id = r.id;
-      li.innerHTML = `<span class="route-list-name">${r.name}</span><span class="route-list-meta mono">${r.typeLabel} · ${s.distance} · ${s.elevation} D+${s.computed ? '' : ' *'}</span>`;
+      li.innerHTML = `<span class="route-list-name">${r.name}</span><span class="route-list-meta mono">${r.typeLabel} · ${s.distance} · ${s.elevation} D+${s.computed ? '' : ' *'}</span><span class="dl-count mono" id="dl-count-list-${r.id}">${downloadBadgeHTML(r.id)}</span>`;
       li.addEventListener('click', () => selectRoute(r.id));
       routesListEl.appendChild(li);
     });
@@ -1289,6 +1352,7 @@
     detailName.textContent = 'Sem rotas nesta categoria';
     detailDescription.textContent = '';
     detailDownload.style.visibility = 'hidden';
+    document.getElementById('dl-count-detail').innerHTML = '';
     detailDist.textContent = '—';
     detailElev.textContent = '—';
     detailDistFlag.textContent = '';
@@ -1317,6 +1381,8 @@
     detailDownload.style.visibility = 'visible';
     detailDiff.style.width = route.diff + '%';
     detailStatus.textContent = route.status;
+    document.getElementById('dl-count-detail').innerHTML = downloadBadgeHTML(route.id);
+    if (downloadCounts[route.id] === undefined) fetchDownloadCount(route.id);
 
     const s = displayStats(route);
     detailDist.textContent = s.distance;
@@ -1442,7 +1508,13 @@
     await Promise.all(ROUTES.map(r => loadRouteGpx(r)));
     renderRoutesList();
     if (ROUTES.length) selectRoute(ROUTES[0].id);
+    // contagens de download não bloqueiam o resto — vão chegando e atualizam sozinhas
+    ROUTES.forEach(r => fetchDownloadCount(r.id));
   })();
+
+  detailDownload.addEventListener('click', () => {
+    if (activeRouteId) registerDownload(activeRouteId);
+  });
 
   // Route line drawn along scroll progress
   const routePath = document.getElementById('routeline-path');
