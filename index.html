@@ -793,8 +793,7 @@
         </ul>
       </div>
 
-      <form id="gpx-form" class="gpx-form reveal" name="gpx-submission" method="POST" data-netlify="true" netlify-honeypot="empresa" enctype="multipart/form-data">
-        <input type="hidden" name="form-name" value="gpx-submission">
+      <form id="gpx-form" class="gpx-form reveal" name="gpx-submission" method="POST" enctype="multipart/form-data">
         <p class="hp-field" aria-hidden="true"><label>Não preencher<input name="empresa" tabindex="-1" autocomplete="off"></label></p>
 
         <div class="form-row">
@@ -1023,27 +1022,42 @@
     }
   });
 
+  // Submissão via a nossa própria Netlify Function (não usa o Netlify Forms —
+  // o envio de ficheiros por essa via é conhecido por ser pouco fiável). A
+  // function grava o GPX + metadados no Netlify Blobs, sem sair da página.
   gpxForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (fileInput.files[0] && !fileInput.files[0].name.toLowerCase().endsWith('.gpx')){
+      formStatus.hidden = false;
+      formStatus.className = 'form-status mono err';
+      formStatus.textContent = 'Por favor envia um ficheiro .gpx.';
+      return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'A enviar…';
     formStatus.hidden = true;
 
-    const formData = new FormData(gpxForm);
     try {
-      const res = await fetch('/', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('network');
+      const res = await fetch('/.netlify/functions/submit-gpx', {
+        method: 'POST',
+        body: new FormData(gpxForm)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || ('http-' + res.status));
+
       formStatus.hidden = false;
       formStatus.className = 'form-status mono ok';
       formStatus.textContent = 'Recebido! A rota entra em fila de revisão — obrigado pela contribuição.';
       gpxForm.reset();
       setFileLabel(null);
-      submitBtn.textContent = 'Enviar para revisão';
-      submitBtn.disabled = false;
     } catch (err) {
+      console.error('[Base Outdoor] Falha ao submeter GPX:', err);
       formStatus.hidden = false;
       formStatus.className = 'form-status mono err';
       formStatus.innerHTML = 'Não foi possível submeter automaticamente. Envia o ficheiro por email para <a href="mailto:geral@amigosdopedal.pt?subject=Submiss%C3%A3o%20de%20rota%20GPX" style="color:var(--orange); text-decoration:underline;">geral@amigosdopedal.pt</a> com o .gpx em anexo.';
+    } finally {
       submitBtn.textContent = 'Enviar para revisão';
       submitBtn.disabled = false;
     }
