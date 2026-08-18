@@ -1,3 +1,4 @@
 [functions]
   included_files = ["assets/images/louseiro/**"]
+[build]
   functions = "netlify/functions"
