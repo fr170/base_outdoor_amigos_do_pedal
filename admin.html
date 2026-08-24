@@ -10,7 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
-  
   :root{
     --pine:#131f17; --forest:#1e3225; --orange:#e35f21; --orange-2:#ff7a3d;
     --olive:#8a9a5b; --cream:#f3ede0; --paper:#faf7ee; --ink:#12160f;
@@ -207,9 +206,14 @@
   let activeGpxPoints = [];
   let replacementFile = null;
 
-  function authHeaders(){
-    return { 'x-admin-password': adminPassword };
+  // Passa a password como query param em vez de header — mais fiável em
+  // todos os browsers sem risco de o preflight CORS a rejeitar.
+  function withAuth(url){
+    const u = new URL(url, location.origin);
+    u.searchParams.set('pw', adminPassword);
+    return u.toString();
   }
+  function authHeaders(){ return {}; } // mantido para não partir chamadas existentes
 
   // ---- Gate ----
   const gate = document.getElementById('gate');
@@ -220,7 +224,8 @@
   async function tryEnter(pw){
     gateError.textContent = '';
     try {
-      const res = await fetch(API.list, { headers: { 'x-admin-password': pw } });
+      const u = new URL(API.list, location.origin); u.searchParams.set('pw', pw);
+      const res = await fetch(u.toString());
       if (res.status === 401){
         gateError.textContent = 'Password incorreta.';
         return false;
@@ -259,8 +264,8 @@
   async function loadList(){
     subListEl.innerHTML = '';
     try {
-      const url = API.list + (toggleAll.checked ? '?all=1' : '');
-      const res = await fetch(url, { headers: authHeaders() });
+      const baseUrl = API.list + (toggleAll.checked ? '?all=1' : '');
+      const res = await fetch(withAuth(baseUrl));
       if (res.status === 401){ sessionStorage.removeItem('baseOutdoorAdminPw'); location.reload(); return; }
       const data = await res.json();
       submissions = (data.submissions || []);
@@ -308,7 +313,7 @@
 
     detailEl.innerHTML = '<div class="detail-empty">A carregar…</div>';
     try {
-      const res = await fetch(API.get + '?key=' + encodeURIComponent(key), { headers: authHeaders() });
+      const res = await fetch(withAuth(API.get + '?key=' + encodeURIComponent(key)));
       if (res.status === 401){ sessionStorage.removeItem('baseOutdoorAdminPw'); location.reload(); return; }
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'erro');
@@ -510,9 +515,9 @@
       statusEl.className = 'action-status mono';
       statusEl.textContent = 'A processar…';
       try {
-        const res = await fetch(API.reject, {
+        const res = await fetch(withAuth(API.reject), {
           method: 'POST',
-          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key })
         });
         const data = await res.json();
