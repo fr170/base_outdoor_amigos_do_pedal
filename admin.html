@@ -564,7 +564,7 @@
     if (replacementFile) formData.set('gpxFile', replacementFile);
 
     try {
-      const res = await fetch(API.approve, { method: 'POST', headers: authHeaders(), body: formData });
+      const res = await fetch(withAuth(API.approve), { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || 'erro');
       statusEl.className = 'action-status mono ok';

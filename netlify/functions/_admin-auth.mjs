@@ -7,8 +7,19 @@
 // como camada extra de discrição.
 
 export function checkAdminAuth(request) {
-  const provided = request.headers.get("x-admin-password") || "";
-  const expected = process.env.ADMIN_PASSWORD || "";
-  if (!expected) return false; // sem password configurada no Netlify => acesso negado por omissão
-  return provided === expected;
+  // Aceita a password tanto no header x-admin-password como no query param
+  // ?pw=... (fallback para casos onde o browser strip headers personalizados).
+  const url = new URL(request.url);
+  const provided =
+    request.headers.get("x-admin-password") ||
+    url.searchParams.get("pw") ||
+    "";
+  const expected = (process.env.ADMIN_PASSWORD || "").trim();
+  console.log(
+    "[admin-auth] expected.length:", expected.length,
+    "| provided.length:", provided.trim().length,
+    "| match:", provided.trim() === expected
+  );
+  if (!expected) return false;
+  return provided.trim() === expected;
 }
