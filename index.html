@@ -198,11 +198,20 @@
   .reveal{opacity:0; transform:translateY(26px); transition:opacity .7s ease, transform .7s ease;}
   .reveal.in{opacity:1; transform:translateY(0);}
 
-  /* Apresentação */
-  .presentation-grid{
+  /* Conceito */
+  .conceito-grid{
     display:grid; grid-template-columns:1.1fr 0.9fr; gap:70px; align-items:center;
   }
-  .presentation-grid p{color:var(--mist); font-size:16.5px; margin-bottom:18px;}
+  .conceito-pills{
+    list-style:none; display:flex; flex-direction:column; gap:0;
+  }
+  .conceito-pills li{
+    font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--mist);
+    padding:11px 0; border-top:1px solid var(--line);
+    display:flex; align-items:baseline; gap:10px;
+  }
+  .conceito-pills li::before{content:"—"; color:var(--orange); flex-shrink:0;}
+  @media (max-width:900px){ .conceito-grid{grid-template-columns:1fr;} }
   .topo-card{
     background:var(--forest); border:1px solid var(--line); border-radius:4px;
     padding:34px; position:relative; overflow:hidden;
@@ -212,43 +221,7 @@
     margin-top:20px; font-family:'IBM Plex Mono', monospace; font-size:12px;
     color:var(--olive); letter-spacing:0.06em; text-transform:uppercase;
   }
-  @media (max-width:900px){ .presentation-grid{grid-template-columns:1fr;} }
-
-  /* O que se pretende — waypoint list */
-  .waypoints{position:relative; padding-left:34px; margin-top:50px;}
-  .waypoints::before{
-    content:""; position:absolute; left:6px; top:6px; bottom:6px; width:1px;
-    background:repeating-linear-gradient(to bottom, var(--olive) 0 6px, transparent 6px 12px);
-  }
-  .waypoint{position:relative; padding-bottom:36px;}
-  .waypoint:last-child{padding-bottom:0;}
-  .waypoint::before{
-    content:""; position:absolute; left:-34px; top:4px; width:11px; height:11px;
-    border-radius:50%; background:var(--orange); border:2px solid var(--pine);
-    box-shadow:0 0 0 1px var(--orange);
-  }
-  .waypoint p{font-size:17px; max-width:620px;}
-  .note-strip{
-    margin-top:56px; border-left:2px solid var(--orange); padding:16px 22px;
-    background:var(--forest); font-family:'IBM Plex Mono', monospace; font-size:13px;
-    color:var(--mist); max-width:720px; line-height:1.7;
-  }
-
-  /* Premissas pillars */
-  .pillars{display:grid; grid-template-columns:repeat(2,1fr); gap:2px; margin-top:56px; background:var(--line);}
-  .pillar{
-    background:var(--paper); padding:38px 34px; display:flex; flex-direction:column; gap:14px;
-  }
-  .pillar-icon{width:34px; height:34px; stroke:var(--orange); fill:none; stroke-width:1.6;}
-  .pillar h3{font-size:22px; letter-spacing:0.01em;}
-  .pillar ul{list-style:none; margin-top:6px;}
-  .pillar li{
-    font-size:14.5px; color:#4a5245; padding:6px 0 6px 18px; position:relative;
-    border-top:1px solid #e7e0cf;
-  }
-  .pillar li:first-child{border-top:0;}
-  .pillar li::before{content:"—"; position:absolute; left:0; color:var(--olive);}
-  @media (max-width:760px){ .pillars{grid-template-columns:1fr;} }
+  @media (max-width:900px){ .conceito-grid{grid-template-columns:1fr;} }
 
   /* Rotas — filtros */
   .routes-head{display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; margin-bottom:50px;}
@@ -583,12 +556,10 @@
     BASE <span class="tag">OUTDOOR</span>
   </a>
   <nav class="links" id="nav-links">
-    <a href="#apresentacao">Apresentação</a>
-    <a href="#pretende">Objetivo</a>
-    <a href="#premissas">Premissas</a>
+    <a href="#apresentacao">Conceito</a>
+    <a href="#base">Base física</a>
     <a href="#rotas">Rotas</a>
     <a href="#submeter">Submeter rota</a>
-    <a href="#base">Base física</a>
     <a href="#estrategia">Estratégia</a>
     <a href="#contacto" class="nav-cta">Contacto</a>
   </nav>
@@ -624,16 +595,20 @@
     <div class="scroll-cue"><span>Descer</span><span class="line"></span></div>
   </section>
 
-  <!-- APRESENTAÇÃO -->
+  <!-- CONCEITO -->
   <section class="section-dark" id="apresentacao">
     <div class="wrap">
-      <div class="presentation-grid">
+      <div class="conceito-grid">
         <div class="reveal">
-          <div class="eyebrow">Apresentação</div>
+          <div class="eyebrow">Conceito</div>
           <h2 class="h-title">Uma base para<br>o que já fazíamos</h2>
-          <p>A Base Outdoor nasce da vontade de organizar, valorizar e estruturar aquilo que os Amigos do Pedal já fazem há vários anos: promover o desporto outdoor, a ligação ao território e a cultura de superação na região de Cortes do Meio.</p>
-          <p>Assume-se como um centro digital de rotas e ponto de partida para a prática de BTT, ciclismo de estrada, atletismo e trail, com base física no Campo Multidesportos do Louseiro.</p>
-          <p>Mais do que um conjunto de percursos, a Base Outdoor pretende afirmar a Serra da Estrela como território ativo de treino, aventura e identidade desportiva.</p>
+          <p style="color:var(--mist); font-size:16.5px; margin-bottom:28px; max-width:520px;">A Base Outdoor organiza o que os Amigos do Pedal já fazem há anos — promover o desporto outdoor e a ligação ao território de Cortes do Meio. Um centro digital de rotas GPX para BTT, estrada, trail e cross, ancorado fisicamente no Campo Multidesportos do Louseiro.</p>
+          <ul class="conceito-pills">
+            <li>100% digital — sem sinalização no terreno</li>
+            <li>Rotas com traçado real e download GPX</li>
+            <li>Sustentável, responsável, aberto a todos</li>
+            <li>Histórico de raids: Folgosinho, Sortelha, Monsanto, Piódão, Castelo Novo</li>
+          </ul>
         </div>
         <div class="topo-card reveal">
           <svg viewBox="0 0 320 280" width="100%">
@@ -654,65 +629,41 @@
     </div>
   </section>
 
-  <!-- O QUE SE PRETENDE -->
-  <section id="pretende">
+  <!-- BASE FÍSICA -->
+  <section class="section-dark" id="base">
     <div class="wrap">
-      <div class="eyebrow reveal">O que se pretende</div>
-      <h2 class="h-title reveal">Seis objetivos,<br>um só território</h2>
-      <div class="waypoints">
-        <div class="waypoint reveal"><p>Criar um centro digital organizado de rotas GPX, acessíveis a todos.</p></div>
-        <div class="waypoint reveal"><p>Estruturar um ponto de partida físico com apoio logístico — balneários disponíveis 24h.</p></div>
-        <div class="waypoint reveal"><p>Valorizar as infraestruturas já existentes no Louseiro.</p></div>
-        <div class="waypoint reveal"><p>Reforçar a identidade regional ligada ao desporto outdoor.</p></div>
-        <div class="waypoint reveal"><p>Preservar e divulgar o histórico de eventos e raids da associação.</p></div>
-        <div class="waypoint reveal"><p>Projetar a região como destino de prática desportiva informal e responsável.</p></div>
-      </div>
-      <div class="note-strip reveal">O projeto é 100% digital no que diz respeito aos percursos — não prevê qualquer tipo de marcação física no terreno.</div>
-    </div>
-  </section>
-
-  <!-- PREMISSAS -->
-  <section class="section-dark" id="premissas">
-    <div class="wrap">
-      <div class="eyebrow reveal">Premissas do projeto</div>
-      <h2 class="h-title reveal">Princípios que<br>não se negoceiam</h2>
-      <div class="pillars">
-        <div class="pillar reveal">
-          <svg class="pillar-icon" viewBox="0 0 24 24"><path d="M12 2 C7 8 6 13 12 22 C18 13 17 8 12 2 Z"/><path d="M12 8 L12 18"/></svg>
-          <h3>Sustentabilidade</h3>
-          <ul>
-            <li>Sem sinalização física</li>
-            <li>Sem impacto ambiental adicional</li>
-            <li>Respeito integral pelo território</li>
+      <div class="base-grid">
+        <div class="reveal">
+          <div class="eyebrow">Base física</div>
+          <h2 class="h-title">Campo Multidesportos<br>do Louseiro</h2>
+          <p class="mist">Ponto de partida real para quem chega de fora e apoio logístico para quem treina na região todas as semanas.</p>
+          <ul class="infra-list" style="margin-top:26px;">
+            <li>
+              <svg viewBox="0 0 24 24"><path d="M4 21 V10 L12 4 L20 10 V21 Z"/><path d="M9 21 V14 H15 V21"/></svg>
+              <div><strong style="color:var(--paper);">Balneários 24h</strong><span class="mist">Banhos disponíveis a qualquer hora, para chegadas e partidas fora de horário.</span></div>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="5"/><ellipse cx="12" cy="12" rx="4.5" ry="2.5"/></svg>
+              <div><strong style="color:var(--paper);">Pista de corta-mato Samuel Barata</strong><span class="mist">Espaço dedicado ao treino de cross e atletismo de terreno.</span></div>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3 V21 M3 12 H21"/></svg>
+              <div><strong style="color:var(--paper);">Pista de atletismo simplificada</strong><span class="mist">Apoio ao treino técnico e à preparação física de base.</span></div>
+            </li>
           </ul>
         </div>
-        <div class="pillar reveal">
-          <svg class="pillar-icon" viewBox="0 0 24 24"><path d="M12 2 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z"/></svg>
-          <h3>Responsabilidade</h3>
-          <ul>
-            <li>Rotas disponibilizadas em formato digital (GPX)</li>
-            <li>Informação clara sobre nível de dificuldade</li>
-            <li>Utilização por conta e risco do praticante</li>
-          </ul>
-        </div>
-        <div class="pillar reveal">
-          <svg class="pillar-icon" viewBox="0 0 24 24"><path d="M12 21 C12 21 5 14.5 5 9.5 C5 5.9 8.1 3 12 3 C15.9 3 19 5.9 19 9.5 C19 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
-          <h3>Valorização do território</h3>
-          <ul>
-            <li>Ligação às aldeias históricas</li>
-            <li>Raids já realizados: Folgosinho, Sortelha, Monsanto, Piódão, Castelo Novo</li>
-            <li>Promoção da Serra como espaço de prática regular</li>
-          </ul>
-        </div>
-        <div class="pillar reveal">
-          <svg class="pillar-icon" viewBox="0 0 24 24"><path d="M4 21 V10 L12 4 L20 10 V21 Z"/><path d="M9 21 V14 H15 V21"/></svg>
-          <h3>Infraestruturas existentes</h3>
-          <ul>
-            <li>Campo Multidesportos do Louseiro</li>
-            <li>Balneários com banhos disponíveis 24h</li>
-            <li>Pista de corta-mato Samuel Barata</li>
-            <li>Pista de atletismo simplificada</li>
-          </ul>
+        <div class="map-card reveal" id="louseiro-carousel">
+          <div class="carousel-track" id="carousel-track"></div>
+          <div class="carousel-overlay">
+            <div class="pin mono">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21 C12 21 5 14.5 5 9.5 C5 5.9 8.1 3 12 3 C15.9 3 19 5.9 19 9.5 C19 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+              Louseiro, Cortes do Meio
+            </div>
+            <h3>O ponto zero de todas as rotas</h3>
+          </div>
+          <button class="carousel-arrow prev" aria-label="Imagem anterior">‹</button>
+          <button class="carousel-arrow next" aria-label="Imagem seguinte">›</button>
+          <div class="carousel-dots" id="carousel-dots"></div>
         </div>
       </div>
     </div>
@@ -846,45 +797,6 @@
     </div>
   </section>
 
-  <!-- BASE FÍSICA -->
-  <section class="section-dark" id="base">
-    <div class="wrap">
-      <div class="base-grid">
-        <div class="reveal">
-          <div class="eyebrow">Base física</div>
-          <h2 class="h-title">Campo Multidesportos<br>do Louseiro</h2>
-          <p class="mist">Ponto de partida real para quem chega de fora e apoio logístico para quem treina na região todas as semanas.</p>
-          <ul class="infra-list" style="margin-top:26px;">
-            <li>
-              <svg viewBox="0 0 24 24"><path d="M4 21 V10 L12 4 L20 10 V21 Z"/><path d="M9 21 V14 H15 V21"/></svg>
-              <div><strong style="color:var(--paper);">Balneários 24h</strong><span class="mist">Banhos disponíveis a qualquer hora, para chegadas e partidas fora de horário.</span></div>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="5"/><ellipse cx="12" cy="12" rx="4.5" ry="2.5"/></svg>
-              <div><strong style="color:var(--paper);">Pista de corta-mato Samuel Barata</strong><span class="mist">Espaço dedicado ao treino de cross e atletismo de terreno.</span></div>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3 V21 M3 12 H21"/></svg>
-              <div><strong style="color:var(--paper);">Pista de atletismo simplificada</strong><span class="mist">Apoio ao treino técnico e à preparação física de base.</span></div>
-            </li>
-          </ul>
-        </div>
-        <div class="map-card reveal" id="louseiro-carousel">
-          <div class="carousel-track" id="carousel-track"></div>
-          <div class="carousel-overlay">
-            <div class="pin mono">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21 C12 21 5 14.5 5 9.5 C5 5.9 8.1 3 12 3 C15.9 3 19 5.9 19 9.5 C19 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
-              Louseiro, Cortes do Meio
-            </div>
-            <h3>O ponto zero de todas as rotas</h3>
-          </div>
-          <button class="carousel-arrow prev" aria-label="Imagem anterior">‹</button>
-          <button class="carousel-arrow next" aria-label="Imagem seguinte">›</button>
-          <div class="carousel-dots" id="carousel-dots"></div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- ESTRATÉGIA -->
   <section id="estrategia">
@@ -1518,6 +1430,17 @@
       routesEmpty.hidden = false;
       routesEmpty.textContent = 'Não foi possível carregar o catálogo de rotas (assets/data/routes.json). Verifica se o ficheiro existe e está publicado.';
       return;
+    }
+    // Junta as rotas aprovadas pelo admin (aparecem sem precisar de novo deploy).
+    try {
+      const pubRes = await fetch('/.netlify/functions/get-published-routes', { cache: 'no-store' });
+      if (pubRes.ok){
+        const published = await pubRes.json();
+        if (Array.isArray(published)) ROUTES = ROUTES.concat(published);
+      }
+    } catch (err){
+      console.error('[Base Outdoor] Rotas aprovadas pela comunidade indisponíveis:', err);
+      // falha silenciosa — o catálogo original continua a funcionar na mesma
     }
     await Promise.all(ROUTES.map(r => loadRouteGpx(r)));
     renderRoutesList();
