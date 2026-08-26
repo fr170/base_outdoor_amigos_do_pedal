@@ -424,13 +424,14 @@
   .infra-list strong{display:block; font-size:16px; margin-bottom:3px;}
   .infra-list span{font-size:14.5px; color:#5a6152;}
   .map-card{
-    background:var(--pine); border-radius:6px; color:var(--paper);
+    background:var(--pine) url('assets/images/louseiro/louseiro-1.jpg') center/cover no-repeat;
+    border-radius:6px; color:var(--paper);
     position:relative; overflow:hidden; height:440px;
   }
-  .carousel-track{position:relative; width:100%; height:100%;}
+  .carousel-track{position:absolute; inset:0; width:100%; height:100%;}
   .carousel-slide{
     position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-    opacity:0; transition:opacity .9s ease;
+    opacity:0; transition:opacity .9s ease; display:block;
   }
   .carousel-slide.active{opacity:1;}
   .carousel-overlay{
@@ -976,19 +977,29 @@
   });
 
   // Louseiro photo carousel
-  const louseiroImages = [
-    'assets/images/louseiro/louseiro-1.jpg'
-    // , 'assets/images/louseiro/louseiro-2.jpg'
-    // , 'assets/images/louseiro/louseiro-3.jpg'
-  ];
-
-  (function initCarousel(){
+  // Carrossel do Louseiro — as imagens são lidas dinamicamente da pasta
+  // assets/images/louseiro/ via a Netlify Function. Para adicionar fotos
+  // basta colocar o ficheiro nessa pasta e fazer commit/push — sem tocar no código.
+  (async function initCarousel(){
     const root = document.getElementById('louseiro-carousel');
     const track = document.getElementById('carousel-track');
     const dotsWrap = document.getElementById('carousel-dots');
     const prevBtn = root.querySelector('.carousel-arrow.prev');
     const nextBtn = root.querySelector('.carousel-arrow.next');
-    if (!root || !track || louseiroImages.length === 0) return;
+    if (!root || !track) return;
+
+    let louseiroImages = [];
+    try {
+      const res = await fetch('/.netlify/functions/louseiro-images');
+      if (res.ok) louseiroImages = await res.json();
+    } catch (err) {
+      console.error('[Carrossel] Não foi possível carregar a lista de imagens:', err);
+    }
+    if (louseiroImages.length === 0){
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+      return; // o CSS já tem o background-image como fallback
+    }
 
     let current = 0;
     let timer;
@@ -998,6 +1009,7 @@
       img.src = src;
       img.alt = 'Campo Multidesportos do Louseiro';
       img.className = 'carousel-slide' + (i === 0 ? ' active' : '');
+      img.onerror = () => console.error('[Carrossel] Não consegui carregar:', src, '— confirma que o ficheiro está no repositório em assets/images/louseiro/');
       track.appendChild(img);
     });
     const slides = track.querySelectorAll('.carousel-slide');
