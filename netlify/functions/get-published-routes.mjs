@@ -23,6 +23,7 @@ export default async () => {
     for (const infoKey of infoKeys) {
       const info = await store.get(infoKey, { type: "json" });
       if (!info) continue;
+      if (info.active === false) continue; // desativada pelo admin — não aparece no site
       routes.push({
         ...info,
         gpx: `/.netlify/functions/get-published-gpx?id=${encodeURIComponent(info.id)}`
